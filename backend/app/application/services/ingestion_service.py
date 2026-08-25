@@ -13,6 +13,7 @@ from app.infrastructure.connectors.rss_connector import RSSConnector
 from app.infrastructure.connectors.bluesky_connector import BlueskyConnector
 from app.ml.detection.preprocessing import TextPreprocessor
 from app.application.services.detection_service import DetectionService
+from app.application.services.campaign_discovery_service import CampaignDiscoveryService
 from app.presentation.websocket.simulation_ws import ws_manager
 
 logger = logging.getLogger("ingestion_service")
@@ -20,11 +21,16 @@ logger = logging.getLogger("ingestion_service")
 class IngestionService:
     """
     Orchestrates real-time public data ingestion, normalization, deduplication,
-    automatic Part 1 AI content detection, and live WebSocket telemetry publishing.
+    automatic Part 1 AI content detection, dynamic campaign discovery, and live WebSocket telemetry.
     """
 
-    def __init__(self, detection_service: Optional[DetectionService] = None):
+    def __init__(
+        self,
+        detection_service: Optional[DetectionService] = None,
+        discovery_service: Optional[CampaignDiscoveryService] = None
+    ):
         self.detection_service = detection_service or DetectionService()
+        self.discovery_service = discovery_service or CampaignDiscoveryService()
         self.connectors: Dict[str, DataSourceConnector] = {
             "gdelt": GDELTConnector(),
             "rss": RSSConnector(),
@@ -206,12 +212,23 @@ class IngestionService:
 
         db.commit()
 
+        # 6. Dynamic Live Threat Campaign Discovery
+        discovered_campaigns = []
+        if ingested_count > 0:
+            try:
+                discovered_campaigns = self.discovery_service.discover_and_update_campaigns(db)
+                if discovered_campaigns:
+                    logger.info(f"Dynamic threat engine discovered/updated {len(discovered_campaigns)} live emergent campaigns.")
+            except Exception as disc_err:
+                logger.error(f"Dynamic campaign discovery note: {disc_err}")
+
         return {
             "source": connector.name,
             "source_type": source_key,
             "ingested": ingested_count,
             "skipped_duplicates": skipped_count,
             "records": ingested_records,
+            "discovered_campaigns": len(discovered_campaigns),
             "last_sync_at": now.isoformat()
         }
 

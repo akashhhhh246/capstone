@@ -109,6 +109,16 @@ export const api = {
     return res.data;
   },
 
+  getCampaignReport: async (id: string): Promise<any> => {
+    const res = await apiClient.get(`/campaigns/${id}/report`);
+    return res.data;
+  },
+
+  discoverCampaigns: async (): Promise<any> => {
+    const res = await apiClient.post('/campaigns/discover');
+    return res.data;
+  },
+
   // Simulation
   startSimulation: async (campaignId: string, eventRate = 1.5, durationSeconds = 120): Promise<any> => {
     const res = await apiClient.post('/simulation/start', {

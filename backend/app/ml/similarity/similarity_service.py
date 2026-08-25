@@ -16,6 +16,16 @@ class SimilarityService:
         self.tfidf_engine = TFIDFSimilarity()
         self.embedding_engine = EmbeddingSimilarity(self.embedding_provider)
 
+    def get_embeddings(self, texts: List[str]):
+        return self.embedding_provider.get_embeddings(texts)
+
+    def compute_pairwise_matrix(self, texts: List[str]):
+        """Compute pairwise dense cosine similarity matrix for a list of texts."""
+        if not texts:
+            return []
+        embeddings = self.embedding_provider.get_embeddings(texts)
+        return self.embedding_engine.compute_similarity_matrix(embeddings)
+
     def compute_tfidf_similarity(self, query_text: str, candidate_texts: List[str]) -> List[float]:
         return self.tfidf_engine.compute_similarity(query_text, candidate_texts)
 

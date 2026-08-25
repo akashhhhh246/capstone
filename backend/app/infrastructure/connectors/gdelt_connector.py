@@ -176,14 +176,19 @@ class GDELTConnector(DataSourceConnector):
                 return normalized_items
 
         except Exception as e:
-            self.last_error = str(e)
-            self.status = "ERROR"
-            logger.warning(f"GDELT public API rate-limit/network note: {e}")
+            err_str = str(e)
+            self.last_error = err_str
+            if "429" in err_str or "Too Many Requests" in err_str:
+                self.status = "RATE_LIMITED"
+                self.last_error = "Public API rate-limit reached (operating in resilient fallback mode)"
+                logger.info(f"GDELT public API rate-limited (429). Serving fallback intelligence stream.")
+            else:
+                self.status = "ERROR"
+                logger.warning(f"GDELT public API network note: {e}")
             
             # If rate-limited or offline, provide real-world open intelligence baseline feed
             fallback_items = self._get_fallback_real_world_feed()
             if fallback_items:
-                self.status = "CONNECTED"
                 return fallback_items
             return []
 

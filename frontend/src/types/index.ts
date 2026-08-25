@@ -87,7 +87,7 @@ export interface DataSourceStatus {
   source_name: string;
   source_type: string;
   is_enabled: boolean;
-  status: 'CONNECTED' | 'POLLING' | 'ERROR' | 'DISABLED' | 'OPTIONAL_DISABLED';
+  status: 'CONNECTED' | 'POLLING' | 'RATE_LIMITED' | 'DEGRADED' | 'ERROR' | 'DISABLED' | 'OPTIONAL_DISABLED';
   last_sync_at: string | null;
   total_ingested: number;
   duplicates_skipped: number;
