@@ -151,14 +151,28 @@ async def websocket_live_endpoint(websocket: WebSocket):
     except Exception:
         ws_manager.disconnect(websocket, simulation_id="global")
 
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check():
+    """Health check endpoint for Render, Docker, and Kubernetes probes."""
+    return JSONResponse(status_code=200, content={"status": "UP", "service": "aegis-defense-workbench", "version": "1.0.0"})
+
 # Serve built frontend dist assets if present
-frontend_dist = os.path.abspath(os.path.join(os.path.dirname(backend_dir), "frontend", "dist"))
-if os.path.exists(frontend_dist):
+candidate_dist_paths = [
+    os.path.abspath(os.path.join(os.path.dirname(backend_dir), "frontend", "dist")),
+    os.path.abspath(os.path.join(os.getcwd(), "..", "frontend", "dist")),
+    os.path.abspath(os.path.join(os.getcwd(), "frontend", "dist")),
+    os.path.abspath("../frontend/dist"),
+]
+
+frontend_dist = next((p for p in candidate_dist_paths if os.path.exists(p)), None)
+
+if frontend_dist and os.path.exists(frontend_dist):
+    logger.info(f"Mounted production frontend bundle from: {frontend_dist}")
     assets_dir = os.path.join(frontend_dist, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_frontend_spa(request: Request, full_path: str):
         # If API or Docs route, pass through
         if full_path.startswith("api") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
@@ -171,7 +185,8 @@ if os.path.exists(frontend_dist):
             return FileResponse(index_path)
         return JSONResponse(status_code=404, content={"detail": "Frontend bundle not found"})
 else:
-    @app.get("/")
+    logger.warning("Frontend dist bundle not found; serving fallback API landing.")
+    @app.api_route("/", methods=["GET", "HEAD"])
     def root():
         return {
             "name": settings.PROJECT_NAME,
