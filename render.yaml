@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: aegis-defense-workbench
+    env: python
+    region: oregon
+    plan: free
+    branch: dynamic-and-threat-enhanced
+    buildCommand: ./build.sh
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: NODE_VERSION
+        value: 20.12.0
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: GDELT_ENABLED
+        value: "true"
+      - key: RSS_ENABLED
+        value: "true"
+      - key: GDELT_POLL_INTERVAL
+        value: "180"
