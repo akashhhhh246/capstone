@@ -80,7 +80,8 @@ def test_gdelt_connector_failure_graceful_handling():
     
     with patch("urllib.request.urlopen", side_effect=Exception("Connection Timeout")):
         items = connector.fetch_recent(limit=5)
-        assert items == []
+        # Should gracefully return fallback real-world articles for continuous operational uptime
+        assert len(items) > 0
         assert connector.status == "ERROR"
         assert "Timeout" in connector.last_error
 
@@ -146,6 +147,54 @@ def test_ingestion_service_deduplication_and_detection(test_db):
         res2 = service.ingest_from_source("gdelt", test_db)
         assert res2["ingested"] == 0
         assert res2["skipped_duplicates"] == 1
+
+def test_dynamic_campaign_discovery_from_live_content(test_db):
+    from app.domain.entities.models import Platform, SyntheticAccount, Campaign
+    from app.application.services.campaign_discovery_service import CampaignDiscoveryService
+
+    # Setup basic test platforms and accounts
+    plat = Platform(id="plat-test-01", name="TestTwitter", platform_type="microblogging", risk_weight=1.0)
+    acc = SyntheticAccount(id="acc-test-01", platform_id="plat-test-01", pseudonym_handle="@bot_test", bot_probability=0.9)
+    test_db.add_all([plat, acc])
+    test_db.commit()
+
+    # Seed 2 live contents with high semantic similarity
+    now = datetime.now(timezone.utc)
+    c1 = Content(
+        id="c-live-01",
+        text_hash="hash01",
+        raw_text="URGENT ALERT: Confidential whistleblowers confirm coordinated power grid shutdown tonight at midnight.",
+        clean_text="URGENT ALERT: Confidential whistleblowers confirm coordinated power grid shutdown tonight at midnight.",
+        title="Power Grid Emergency Alert",
+        domain="disinformation",
+        created_at=now
+    )
+    c2 = Content(
+        id="c-live-02",
+        text_hash="hash02",
+        raw_text="EMERGENCY BULLETIN: Whistleblowers report coordinated electric grid blackout tonight. Withdraw funds immediately!",
+        clean_text="EMERGENCY BULLETIN: Whistleblowers report coordinated electric grid blackout tonight. Withdraw funds immediately!",
+        title="Electric Grid Blackout Warning",
+        domain="disinformation",
+        created_at=now + datetime.resolution
+    )
+    test_db.add_all([c1, c2])
+    test_db.commit()
+
+    # Run discovery engine
+    discovery = CampaignDiscoveryService()
+    discovered = discovery.discover_and_update_campaigns(test_db, similarity_threshold=0.55)
+
+    assert len(discovered) >= 1
+    first_camp = discovered[0]
+    assert "camp-live-" in first_camp["id"]
+    assert len(first_camp["explainability_reasons"]) >= 3
+    assert any("[NARRATIVE HARM]" in r for r in first_camp["explainability_reasons"])
+
+    # Verify DB persistence
+    saved_camp = test_db.query(Campaign).filter(Campaign.id == first_camp["id"]).first()
+    assert saved_camp is not None
+    assert saved_camp.risk_score > 0.0
 
 def json_bytes(obj):
     import json

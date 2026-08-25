@@ -170,56 +170,68 @@ class SimulationEngine:
 
     @classmethod
     def _generate_random_event(cls, sim_id: str, campaign_id: str, event_seq: int) -> Dict[str, Any]:
-        platforms = [
-            ("plat-sim-01", "SimuTwitter"),
-            ("plat-sim-02", "SimuTelegram"),
-            ("plat-sim-03", "SimuReddit"),
-            ("plat-sim-04", "SimuNewsWire")
-        ]
-        chosen_plat = random.choice(platforms)
-        
-        accounts = [
-            ("acc-synth-101", "@echo_node_01", 0.92),
-            ("acc-synth-102", "@pulse_relay_beta", 0.88),
-            ("acc-synth-103", "@shadow_wire_99", 0.95),
-            ("acc-synth-104", "@vector_mesh_alpha", 0.74),
-            ("acc-synth-105", "@observer_node_x", 0.25)
-        ]
-        chosen_acc = random.choice(accounts)
-        
-        event_type = random.choice(cls.EVENT_TYPES)
-        now_str = datetime.now(timezone.utc).isoformat()
+        db = SessionLocal()
+        try:
+            # Query actual platforms and accounts from database
+            db_platforms = db.query(Platform).all()
+            db_accounts = db.query(SyntheticAccount).all()
+            db_posts = db.query(Post).filter(Post.campaign_id == campaign_id).all() if campaign_id else []
+            camp = db.query(Campaign).filter(Campaign.id == campaign_id).first() if campaign_id else None
 
-        sim_velocity = round(random.uniform(8.5, 24.0), 2)
-        total_reach = int(2400 + (event_seq * random.randint(80, 160)))
-        risk_score = round(min(0.99, max(0.40, 0.75 + random.uniform(-0.1, 0.15))), 2)
+            if db_platforms:
+                plat_obj = random.choice(db_platforms)
+                chosen_plat = (plat_obj.id, plat_obj.name)
+            else:
+                chosen_plat = ("plat-live-01", "SimuTwitter")
 
-        snippets = [
-            "ALERT: Leaked defense briefing confirms coordinated grid switching protocol...",
-            "URGENT: Municipal water supplies under unverified filtration lockdown...",
-            "BREAKING: Overnight liquidity halt rumored across major banking exchanges...",
-            "Warning: Automated cognitive broadcast signals detected on aviation routes..."
-        ]
+            if db_accounts:
+                acc_obj = random.choice(db_accounts)
+                chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+            else:
+                chosen_acc = ("acc-synth-01", "@node_relay", 0.85)
 
-        return {
-            "event_id": str(uuid.uuid4()),
-            "simulation_id": sim_id,
-            "campaign_id": campaign_id,
-            "event_type": event_type,
-            "source_post_id": f"post-src-{random.randint(100, 199)}",
-            "target_post_id": f"post-tgt-{random.randint(200, 299)}",
-            "account_id": chosen_acc[0],
-            "account_handle": chosen_acc[1],
-            "bot_probability": chosen_acc[2],
-            "platform_id": chosen_plat[0],
-            "platform_name": chosen_plat[1],
-            "content_id": f"content-sim-{random.randint(1, 10)}",
-            "content_snippet": random.choice(snippets),
-            "timestamp": now_str,
-            "velocity": sim_velocity,
-            "total_reach": total_reach,
-            "risk_score": risk_score
-        }
+            event_type = random.choice(cls.EVENT_TYPES)
+            now_str = datetime.now(timezone.utc).isoformat()
+
+            # Dynamic kinetic calculation
+            base_velocity = camp.velocity_events_per_hour if camp else 12.0
+            sim_velocity = round(base_velocity + random.uniform(-1.5, 3.5), 2)
+            base_reach = camp.total_reach if camp else 5000
+            total_reach = int(base_reach + (event_seq * random.randint(50, 180)))
+            base_risk = camp.risk_score if camp else 0.75
+            risk_score = round(min(0.99, max(0.20, base_risk + random.uniform(-0.05, 0.05))), 2)
+
+            if db_posts:
+                chosen_post = random.choice(db_posts)
+                src_post_id = chosen_post.id
+                content_id = chosen_post.content_id
+                snippet = chosen_post.content.raw_text[:120] if chosen_post.content else "Emergent propagation signal active across nodes..."
+            else:
+                src_post_id = f"post-sim-{random.randint(100, 199)}"
+                content_id = f"content-sim-{random.randint(1, 10)}"
+                snippet = camp.target_narrative if camp else "Emergent narrative dissemination detected across live cluster..."
+
+            return {
+                "event_id": str(uuid.uuid4()),
+                "simulation_id": sim_id,
+                "campaign_id": campaign_id,
+                "event_type": event_type,
+                "source_post_id": src_post_id,
+                "target_post_id": f"post-tgt-{uuid.uuid4().hex[:6]}",
+                "account_id": chosen_acc[0],
+                "account_handle": chosen_acc[1],
+                "bot_probability": chosen_acc[2],
+                "platform_id": chosen_plat[0],
+                "platform_name": chosen_plat[1],
+                "content_id": content_id,
+                "content_snippet": snippet,
+                "timestamp": now_str,
+                "velocity": sim_velocity,
+                "total_reach": total_reach,
+                "risk_score": risk_score
+            }
+        finally:
+            db.close()
 
     @classmethod
     def _persist_event(cls, sim_id: str, campaign_id: str, event_data: Dict[str, Any]):

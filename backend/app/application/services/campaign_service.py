@@ -71,11 +71,8 @@ class CampaignService:
             gnn_score=campaign.gnn_risk_score
         )
 
-        # Update campaign model with fresh explainability reasons
-        campaign.explainability_reasons = risk_eval["reasons"]
-        campaign.risk_score = risk_eval["risk_score"]
-        db.commit()
-
+        # Use stored rich domain reasons if available, otherwise use calculated reasons
+        final_reasons = campaign.explainability_reasons if campaign.explainability_reasons else risk_eval["reasons"]
         severity = risk_eval["severity"]
 
         return {
@@ -84,10 +81,10 @@ class CampaignService:
             "objective": campaign.objective,
             "target_narrative": campaign.target_narrative,
             "status": campaign.status,
-            "risk_score": risk_eval["risk_score"],
-            "gnn_risk_score": campaign.gnn_risk_score,
+            "risk_score": round(campaign.risk_score, 2),
+            "gnn_risk_score": round(campaign.gnn_risk_score, 2),
             "severity": severity,
-            "explainability_reasons": risk_eval["reasons"],
+            "explainability_reasons": final_reasons,
             "total_events": campaign.total_events,
             "total_reach": campaign.total_reach,
             "total_platforms": campaign.total_platforms,

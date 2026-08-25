@@ -125,11 +125,10 @@ def seed_database(force_reseed: bool = False):
                 risk_score=0.88,
                 gnn_risk_score=0.84,
                 explainability_reasons=[
-                    "High synthetic content probability (92%) detected by linguistic classifier.",
-                    "Rapid propagation velocity (18.4 events/hour) surpassing baseline organic dissemination.",
-                    "High branching factor (3.8) indicating automated multi-branch cascade amplification.",
-                    "Broad synchronized cross-platform deployment across 4 distinct platforms.",
-                    "GNN graph topology analysis identified coordinated inauthentic behavior signature (score 0.84)."
+                    "[NARRATIVE HARM] Fabricates nationwide critical infrastructure shutdown with explicit call-to-action urging emergency bank fund withdrawals to trigger financial ATM panic.",
+                    "[COORDINATED NETWORK] GraphSAGE GNN identified synchronized inauthentic burst topology across low-age (<15 days) pseudonymized relay accounts with 85%+ bot probability.",
+                    "[EVASION TACTIC] Coordinated multi-platform astroturfing across Telegram, microblogs, and forums deploying 6 paraphrased mutation variants to evade exact-match moderation filters.",
+                    "[AI SYNTHESIS] Stylometric n-gram classifier confirms synthetic text generation (85% probability) used to mass-produce mutations at high diffusion velocity (18.4 events/hr)."
                 ],
                 total_events=42,
                 total_reach=18500,
@@ -147,10 +146,10 @@ def seed_database(force_reseed: bool = False):
                 risk_score=0.82,
                 gnn_risk_score=0.79,
                 explainability_reasons=[
-                    "High synthetic content probability (91%) detected by linguistic classifier.",
-                    "Multiple paraphrased content variants (2) circulating simultaneously.",
-                    "Cross-platform reposting detected across 3 platforms.",
-                    "High concentration of automated/synthetic accounts (75%) participating in cascade."
+                    "[NARRATIVE HARM] Deceptive public health crisis claims alleging metropolitan chemical poisoning with alarmist directives to avoid municipal tap water.",
+                    "[COORDINATED NETWORK] High concentration of automated syndication bots (75%) executing synchronized cross-platform broadcast relays across 3 channels.",
+                    "[EVASION TACTIC] Employs synthetic lexical rephrasing and hashtag injection (#WaterGateAlert) to manufacture organic viral momentum.",
+                    "[AI SYNTHESIS] High linguistic model confidence (82%) identifying template-based prompt generation with characteristic low-burstiness sentence cadence."
                 ],
                 total_events=31,
                 total_reach=12400,
@@ -158,6 +157,48 @@ def seed_database(force_reseed: bool = False):
                 velocity_events_per_hour=12.6,
                 branching_factor=2.9,
                 created_at=now - timedelta(hours=14)
+            ),
+            Campaign(
+                id="camp-05",
+                name="LithoPulse Supply Cascade",
+                objective="Coordinated rumor propagation regarding critical semiconductor equipment export bans",
+                target_narrative="Unverified leaks allege covert supply chain halt on High-NA EUV lithography systems",
+                status="ACTIVE",
+                risk_score=0.68,
+                gnn_risk_score=0.64,
+                explainability_reasons=[
+                    "[NARRATIVE HARM] Market-destabilizing speculation targeting international semiconductor supply chain tools to distort technology equities.",
+                    "[COORDINATED NETWORK] Rapid automated cross-posting on Telegram channels and pseudo-news aggregators with elevated betweenness centrality.",
+                    "[EVASION TACTIC] Paraphrases legitimate financial wire excerpts with sensationalist exaggerations to mimic authoritative reporting.",
+                    "[AI SYNTHESIS] Moderate AI probability (68%) indicating machine-assisted journalistic paraphrasing with uniform syntactic structure."
+                ],
+                total_events=22,
+                total_reach=9800,
+                total_platforms=3,
+                velocity_events_per_hour=8.4,
+                branching_factor=2.4,
+                created_at=now - timedelta(hours=18)
+            ),
+            Campaign(
+                id="camp-06",
+                name="Solid-State Energy Speculation",
+                objective="Viral exaggeration of laboratory-stage solid-state battery commercial readiness",
+                target_narrative="Speculative claims of immediate consumer solid-state battery integration in domestic EV fleets",
+                status="ACTIVE",
+                risk_score=0.44,
+                gnn_risk_score=0.38,
+                explainability_reasons=[
+                    "[NARRATIVE HARM] Commercial technology hype cycle overstating lab readiness without severe civil or infrastructure panic intent.",
+                    "[COORDINATED NETWORK] Predominantly organic enthusiast discussion mixed with minor automated news-relay accounts (25% bot density).",
+                    "[EVASION TACTIC] Low evasion behavior; standard cross-forum sharing without coordinated astroturfing signatures.",
+                    "[AI SYNTHESIS] Mild synthetic indicators (44%) consistent with automated PR aggregation tools and press summary generators."
+                ],
+                total_events=14,
+                total_reach=5200,
+                total_platforms=2,
+                velocity_events_per_hour=4.6,
+                branching_factor=1.7,
+                created_at=now - timedelta(hours=20)
             ),
             Campaign(
                 id="camp-03",
@@ -168,7 +209,10 @@ def seed_database(force_reseed: bool = False):
                 risk_score=0.08,
                 gnn_risk_score=0.06,
                 explainability_reasons=[
-                    "Authentic peer-reviewed scientific journalism with 0% bot coordination and organic distribution."
+                    "[NARRATIVE HARM] Zero harm vector; legitimate scientific educational dissemination regarding deep-field galaxy astrophysics.",
+                    "[COORDINATED NETWORK] 100% organic human propagation verified through peer institutions, official science channels, and academic observers.",
+                    "[EVASION TACTIC] Zero evasion indicators; transparent attribution with verbatim wire syndication and educational summaries.",
+                    "[AI SYNTHESIS] Benign AI assistance (32%) limited to auxiliary news brief formatting without deceptive or malicious intent."
                 ],
                 total_events=12,
                 total_reach=64000,
@@ -186,7 +230,10 @@ def seed_database(force_reseed: bool = False):
                 risk_score=0.15,
                 gnn_risk_score=0.12,
                 explainability_reasons=[
-                    "Benign policy analysis with balanced journalistic and educational discussion."
+                    "[NARRATIVE HARM] Constructive civic policy analysis covering legislative compliance standards for foundation models.",
+                    "[COORDINATED NETWORK] Natural multi-community discourse across technology forums and legal policy analysts with 0% bot coordination.",
+                    "[EVASION TACTIC] Transparent public citations and verified links to official European Parliament communiques.",
+                    "[AI SYNTHESIS] Low-risk baseline synthesis (28%) representing standard automated policy brief translation."
                 ],
                 total_events=16,
                 total_reach=28000,

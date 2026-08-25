@@ -31,3 +31,12 @@ class EmbeddingSimilarity:
 
         sim_scores = np.dot(cand_embs, query_emb)
         return [round(float(s), 4) for s in sim_scores]
+
+    def compute_similarity_matrix(self, embeddings: np.ndarray) -> np.ndarray:
+        """Compute pairwise cosine similarity matrix from an array of embeddings."""
+        if embeddings is None or len(embeddings) == 0:
+            return np.array([[]])
+        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+        norms[norms == 0] = 1.0
+        normalized = embeddings / norms
+        return np.dot(normalized, normalized.T)

@@ -1,0 +1,341 @@
+import os
+import json
+
+backend_dir = os.path.abspath(os.path.dirname(__file__))
+dataset_path = os.path.join(backend_dir, "data", "sample_dataset.json")
+
+# High-standard realistic training dataset
+comprehensive_samples = [
+    # ----------------------------------------------------
+    # CLUSTER 1: JWST Astrophysics (Real vs AI Summary)
+    # ----------------------------------------------------
+    {
+        "id": "jwst-001",
+        "text": "NASA's James Webb Space Telescope has captured the deepest and sharpest infrared image of the distant universe to date. Known as Webb's First Deep Field, this image of galaxy cluster SMACS 0723 is overflowing with detail, revealing thousands of galaxies—including the faintest objects ever observed in the infrared—in a tiny sliver of sky approximately the size of a grain of sand held at arm's length by someone on the ground. The combined mass of the cluster acts as a gravitational lens, magnifying much more distant galaxies behind it.",
+        "label": "HUMAN",
+        "domain": "astrophysics",
+        "synthetic_intent": "benign",
+        "source_type": "official_press_release",
+        "cluster_id": "cluster_jwst_deep_field",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic NASA/ESA official scientific press release for SMACS 0723."
+    },
+    {
+        "id": "jwst-002",
+        "text": "NASA's James Webb Space Telescope has captured the deepest and sharpest infrared image of the distant universe to date. Known as Webb's First Deep Field, this image of galaxy cluster SMACS 0723 is overflowing with detail, revealing thousands of galaxies—including the faintest objects ever observed in the infrared—in a tiny sliver of sky approximately the size of a grain of sand held at arm's length by someone on the ground. The combined mass of the cluster acts as a gravitational lens, magnifying much more distant galaxies behind it.",
+        "label": "HUMAN",
+        "domain": "astrophysics",
+        "synthetic_intent": "benign",
+        "source_type": "wire_syndication",
+        "cluster_id": "cluster_jwst_deep_field",
+        "cluster_role": "EXACT_MIRROR",
+        "notes": "Word-for-word AP/Reuters syndication wire reprint."
+    },
+    {
+        "id": "jwst-003",
+        "text": "The James Webb Space Telescope has officially delivered humanity's clearest and deepest infrared perspective of the cosmos to date. Centered on the massive galaxy cluster SMACS 0723, the groundbreaking deep-field image captures thousands of ancient galaxies, with gravitational lensing magnifying light from primordial structures that formed over thirteen billion years ago.",
+        "label": "AI_GENERATED",
+        "domain": "astrophysics",
+        "synthetic_intent": "benign",
+        "source_type": "llm_summary",
+        "cluster_id": "cluster_jwst_deep_field",
+        "cluster_role": "PARAPHRASED_DERIVATIVE",
+        "notes": "LLM-generated news summary with restructured sentence syntax and vocabulary."
+    },
+    {
+        "id": "jwst-004",
+        "text": "Astronomers analyzing the new James Webb Space Telescope deep field image of SMACS 0723 report that gravitational lensing has revealed several high-redshift candidate galaxies from the epoch of reionization. Spectroscopic follow-up with NIRSpec indicates prominent ionized oxygen emission lines in galaxies appearing as luminous arcs around the cluster core.",
+        "label": "HUMAN",
+        "domain": "astrophysics",
+        "synthetic_intent": "benign",
+        "source_type": "academic_commentary",
+        "cluster_id": "cluster_jwst_deep_field",
+        "cluster_role": "RELATED_NARRATIVE",
+        "notes": "Technical follow-up research paper commentary on NIRSpec spectroscopy."
+    },
+
+    # ----------------------------------------------------
+    # CLUSTER 2: EU AI Governance (Real Policy vs LLM Boilerplate)
+    # ----------------------------------------------------
+    {
+        "id": "ai-reg-001",
+        "text": "The European Parliament and Council have reached a landmark political agreement on the Artificial Intelligence Act, establishing comprehensive risk-based harmonized rules across the European Union. The legislation introduces strict prohibitions on unacceptable-risk AI systems such as cognitive behavioral manipulation and biometric categorization, while imposing rigorous transparency and systemic risk assessment obligations on general-purpose foundation models.",
+        "label": "HUMAN",
+        "domain": "technology_policy",
+        "synthetic_intent": "benign",
+        "source_type": "official_communique",
+        "cluster_id": "cluster_ai_governance",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Official European Commission legislative summary of the EU AI Act."
+    },
+    {
+        "id": "ai-reg-002",
+        "text": "European Union lawmakers have finalized political negotiations on the groundbreaking AI Act, establishing the world's first comprehensive legal framework for artificial intelligence. The regulations ban applications posing unacceptable risks—including social scoring and real-time biometric tracking in public spaces—while mandating safety audits, red-teaming protocols, and transparency disclosures for powerful frontier foundation models.",
+        "label": "HUMAN",
+        "domain": "technology_policy",
+        "synthetic_intent": "benign",
+        "source_type": "journalism",
+        "cluster_id": "cluster_ai_governance",
+        "cluster_role": "NEAR_DUPLICATE",
+        "notes": "Journalistic reporting from Financial Times / Reuters."
+    },
+    {
+        "id": "ai-reg-003",
+        "text": "In a pivotal milestone for global technology governance, European regulators have enacted the EU AI Act to standardize artificial intelligence deployment. In conclusion, the regulatory architecture classifies AI applications across tiered risk categories, enforcing strict compliance standards on foundation models to ensure ethical alignment, algorithmic accountability, and user safety across member states.",
+        "label": "AI_GENERATED",
+        "domain": "technology_policy",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generic",
+        "cluster_id": "cluster_ai_governance",
+        "cluster_role": "PARAPHRASED_DERIVATIVE",
+        "notes": "LLM-generated policy briefing demonstrating boilerplate transitions."
+    },
+    {
+        "id": "ai-reg-004",
+        "text": "Tech industry leaders and legal scholars continue to debate the international implications of the EU Artificial Intelligence Act. While proponents argue that standardized safety benchmarks and watermarking mandates will prevent catastrophic misuse, open-source software advocates express concerns that broad foundation model compliance burdens may stifle academic innovation.",
+        "label": "HUMAN",
+        "domain": "technology_policy",
+        "synthetic_intent": "benign",
+        "source_type": "industry_analysis",
+        "cluster_id": "cluster_ai_governance",
+        "cluster_role": "RELATED_NARRATIVE",
+        "notes": "Industry analysis on open-source innovation impact."
+    },
+
+    # ----------------------------------------------------
+    # CLUSTER 3: Operation GridPulse (Disinformation Campaign)
+    # ----------------------------------------------------
+    {
+        "id": "grid-001",
+        "text": "URGENT ALERT: Confidential government whistleblowers have confirmed that national energy grid switching systems are undergoing a coordinated clandestine shutdown tonight at midnight to enforce simulated blackout mandates. Withdraw all bank funds immediately before ATMs freeze! #GridDown #EmergencyAlert #BlackoutProtocol",
+        "label": "AI_GENERATED",
+        "domain": "disinformation",
+        "synthetic_intent": "malign_simulation",
+        "source_type": "synthetic_seed",
+        "cluster_id": "cluster_grid_disinfo",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Synthetic panic-inducing crisis campaign seed on electrical grid collapse."
+    },
+    {
+        "id": "grid-002",
+        "text": "URGENT ALERT: Confidential government whistleblowers have confirmed that national energy grid switching systems are undergoing a coordinated clandestine shutdown tonight at midnight to enforce simulated blackout mandates. Withdraw all bank funds immediately before ATMs freeze! #GridDown #EmergencyAlert #BlackoutProtocol",
+        "label": "AI_GENERATED",
+        "domain": "disinformation",
+        "synthetic_intent": "malign_simulation",
+        "source_type": "synthetic_mirror",
+        "cluster_id": "cluster_grid_disinfo",
+        "cluster_role": "EXACT_MIRROR",
+        "notes": "Word-for-word bot broadcast mirrored to Telegram and microblog relays."
+    },
+    {
+        "id": "grid-003",
+        "text": "EMERGENCY LEAK: Insider sources reveal that electrical utility substations nationwide will be remotely disabled at 23:59 tonight under secret emergency decrees. Secure cash reserves and emergency rations before banking systems and telecommunications blackouts begin! Spread this message! #GridDown #BlackoutAlert",
+        "label": "AI_GENERATED",
+        "domain": "disinformation",
+        "synthetic_intent": "malign_simulation",
+        "source_type": "synthetic_variant",
+        "cluster_id": "cluster_grid_disinfo",
+        "cluster_role": "PARAPHRASED_DERIVATIVE",
+        "notes": "AI-rewritten mutation with altered vocabulary to bypass exact lexical filters."
+    },
+    {
+        "id": "grid-004",
+        "text": "BREAKING BULLETIN: Defense network analysts report coordinated electronic interference targeting regional power transmission relays. Federal agencies are reportedly preparing rolling blackouts across metropolitan sectors starting at midnight. Withdraw physical currency immediately! #EnergyCrisis #GridDown",
+        "label": "AI_GENERATED",
+        "domain": "disinformation",
+        "synthetic_intent": "malign_simulation",
+        "source_type": "synthetic_variant",
+        "cluster_id": "cluster_grid_disinfo",
+        "cluster_role": "PARAPHRASED_DERIVATIVE",
+        "notes": "Second-generation mutation targeting news-style formatting."
+    },
+    {
+        "id": "grid-005",
+        "text": "The Department of Energy and regional grid operators have issued a formal advisory confirming that all electrical transmission infrastructure is operating normally with zero planned shutdowns. Officials caution the public against unverified viral social media rumors regarding power grid failures.",
+        "label": "HUMAN",
+        "domain": "civic",
+        "synthetic_intent": "benign",
+        "source_type": "official_refutation",
+        "cluster_id": "cluster_grid_disinfo",
+        "cluster_role": "RELATED_NARRATIVE",
+        "notes": "Authentic official fact-checking and debunking statement."
+    },
+
+    # ----------------------------------------------------
+    # CLUSTER 4: Real-World Public News Streams (BBC, Reuters, AP)
+    # ----------------------------------------------------
+    {
+        "id": "news-001",
+        "text": "Robot horse and rider steal the spotlight at Chinese robotics conference. More than 300 industrial and consumer automation companies are showcasing the latest quadruped robotics and bionic prototypes in Beijing this week.",
+        "label": "HUMAN",
+        "domain": "technology",
+        "synthetic_intent": "benign",
+        "source_type": "news_article",
+        "cluster_id": "cluster_robotics_conf",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic BBC Technology reporting on Beijing robotics expo."
+    },
+    {
+        "id": "news-002",
+        "text": "TikTok to pay $400m to US in one of largest child privacy settlements. The agreement resolves an enforcement action alleging the short-video platform improperly collected data from underage users without parental verification.",
+        "label": "HUMAN",
+        "domain": "technology",
+        "synthetic_intent": "benign",
+        "source_type": "news_article",
+        "cluster_id": "cluster_tiktok_privacy",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic Reuters tech legal settlement reporting."
+    },
+    {
+        "id": "news-003",
+        "text": "How landscape gardening is being electrified across urban municipalities. The transition toward quieter, emission-free electric lawnmowers and battery tools is accelerating despite supply chain bottlenecks for commercial crews.",
+        "label": "HUMAN",
+        "domain": "environment",
+        "synthetic_intent": "benign",
+        "source_type": "news_article",
+        "cluster_id": "cluster_electrification",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic BBC business environmental feature."
+    },
+    {
+        "id": "news-004",
+        "text": "Is Vine back? Short-form video-sharing platform Divine launches public beta. The new application lets users record six-second looping clips with decentralized user discovery feeds.",
+        "label": "HUMAN",
+        "domain": "technology",
+        "synthetic_intent": "benign",
+        "source_type": "news_article",
+        "cluster_id": "cluster_divine_app",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic TechCrunch consumer software review."
+    },
+    {
+        "id": "news-005",
+        "text": "Global cybersecurity consortium uncovers sophisticated spear-phishing campaign exploiting cloud collaboration webhooks. Security researchers recommend mandatory hardware token multi-factor authentication across enterprise tenants.",
+        "label": "HUMAN",
+        "domain": "cybersecurity",
+        "synthetic_intent": "benign",
+        "source_type": "news_article",
+        "cluster_id": "cluster_cyber_consortium",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic BleepingComputer / Wired cybersecurity reporting."
+    },
+    {
+        "id": "news-006",
+        "text": "Federal Reserve holds benchmark interest rate steady as inflation metrics align with central bank targets. Economic indicators show sustained labor market resilience across manufacturing and services sectors.",
+        "label": "HUMAN",
+        "domain": "finance",
+        "synthetic_intent": "benign",
+        "source_type": "financial_news",
+        "cluster_id": "cluster_fed_rate",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic Wall Street Journal macroeconomic reporting."
+    },
+    {
+        "id": "news-007",
+        "text": "Scientists at CERN report new precision measurements of Higgs boson decay channels using the High-Luminosity Large Hadron Collider dataset, confirming standard model predictions with five-sigma confidence.",
+        "label": "HUMAN",
+        "domain": "physics",
+        "synthetic_intent": "benign",
+        "source_type": "scientific_news",
+        "cluster_id": "cluster_cern_higgs",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic Nature Physics research dispatch."
+    },
+    {
+        "id": "news-008",
+        "text": "Electric vehicle battery manufacturer inaugurates new gigafactory in Ohio, creating three thousand manufacturing jobs and expanding domestic cathode active material production capacity.",
+        "label": "HUMAN",
+        "domain": "automotive",
+        "synthetic_intent": "benign",
+        "source_type": "industry_news",
+        "cluster_id": "cluster_ev_gigafactory",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic Automotive News regional manufacturing release."
+    },
+    {
+        "id": "news-009",
+        "text": "World Health Organization delivers comprehensive epidemiology update on seasonal respiratory syncytial virus surveillance, noting declining hospitalization rates across primary clinical sentinel networks.",
+        "label": "HUMAN",
+        "domain": "healthcare",
+        "synthetic_intent": "benign",
+        "source_type": "health_bulletin",
+        "cluster_id": "cluster_who_surveillance",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic WHO public health surveillance communique."
+    },
+    {
+        "id": "news-010",
+        "text": "Deep sea oceanographic expedition maps unchartered seamounts in the South Pacific, discovering dozen previously unknown benthic invertebrate species thriving around hydrothermal vent ecosystems.",
+        "label": "HUMAN",
+        "domain": "marine_biology",
+        "synthetic_intent": "benign",
+        "source_type": "science_feature",
+        "cluster_id": "cluster_ocean_expedition",
+        "cluster_role": "ROOT_ORIGIN",
+        "notes": "Authentic National Geographic oceanic expedition report."
+    },
+
+    # ----------------------------------------------------
+    # CLUSTER 5: Realistic LLM Boilerplate & Synthetic Essays
+    # ----------------------------------------------------
+    {
+        "id": "llm-001",
+        "text": "As an AI language model, exploring the intricate dynamics of sustainable energy reveals that solar photovoltaics and wind turbines play a vital role. In conclusion, by fostering collaboration among stakeholders, society can transition toward a greener and more resilient future.",
+        "label": "AI_GENERATED",
+        "domain": "technology",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generated",
+        "cluster_id": "cluster_llm_boilerplate",
+        "cluster_role": "STANDALONE",
+        "notes": "Stereotypical ChatGPT boilerplate opening and closing tropes."
+    },
+    {
+        "id": "llm-002",
+        "text": "It is crucial to consider the multifaceted implications of artificial intelligence in modern education. Furthermore, adaptive learning algorithms empower students to learn at their own pace, while educators must navigate ethical considerations to ensure fair outcomes.",
+        "label": "AI_GENERATED",
+        "domain": "education",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generated",
+        "cluster_id": "cluster_llm_boilerplate",
+        "cluster_role": "STANDALONE",
+        "notes": "LLM text with excessive connective adverbs like 'furthermore', 'multifaceted'."
+    },
+    {
+        "id": "llm-003",
+        "text": "In delving into the realm of modern quantum computing, one cannot overlook the transformative potential of superconducting qubits. In summary, while technical hurdles remain, the convergence of quantum error correction and classical algorithms heralds a new era of computational capability.",
+        "label": "AI_GENERATED",
+        "domain": "quantum",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generated",
+        "cluster_id": "cluster_llm_boilerplate",
+        "cluster_role": "STANDALONE",
+        "notes": "Characteristic AI writing style with 'delving into the realm' tropes."
+    },
+    {
+        "id": "llm-004",
+        "text": "Overall, the impact of remote work on organizational culture presents both notable benefits and distinct challenges. Therefore, companies must adopt flexible communication frameworks to maintain team cohesion while supporting employee work-life balance in today's digital age.",
+        "label": "AI_GENERATED",
+        "domain": "workplace",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generated",
+        "cluster_id": "cluster_llm_boilerplate",
+        "cluster_role": "STANDALONE",
+        "notes": "Synthetic business prose generated by foundation LLM."
+    },
+    {
+        "id": "llm-005",
+        "text": "In conclusion, the evolution of blockchain technology continues to reshape financial transactions. By fostering transparent distributed ledgers, smart contracts offer a robust foundation for decentralized finance, ensuring security and operational integrity across global payment ecosystems.",
+        "label": "AI_GENERATED",
+        "domain": "fintech",
+        "synthetic_intent": "benign",
+        "source_type": "llm_generated",
+        "cluster_id": "cluster_llm_boilerplate",
+        "cluster_role": "STANDALONE",
+        "notes": "Standard AI-generated conclusion block."
+    }
+]
+
+with open(dataset_path, "w", encoding="utf-8") as f:
+    json.dump(comprehensive_samples, f, indent=2)
+
+print(f"Successfully enriched dataset with {len(comprehensive_samples)} realistic samples at {dataset_path}")

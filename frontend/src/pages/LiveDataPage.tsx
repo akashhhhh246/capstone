@@ -11,8 +11,6 @@ import {
   Divider,
   TextField,
   InputAdornment,
-  LinearProgress,
-  Tooltip,
   Alert,
 } from '@mui/material';
 import {
@@ -28,9 +26,8 @@ import {
   Zap,
   GitBranch,
   Search,
-  CheckCircle2,
-  AlertTriangle,
   Play,
+  Send,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { wsService } from '../services/websocket';
@@ -45,6 +42,7 @@ export const LiveDataPage: React.FC = () => {
   const [syncingGdelt, setSyncingGdelt] = useState(false);
   const [syncingRss, setSyncingRss] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [customGdeltQuery, setCustomGdeltQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('ALL');
   const [bannerAlert, setBannerAlert] = useState<string | null>(null);
 
@@ -85,10 +83,11 @@ export const LiveDataPage: React.FC = () => {
     return () => unsub();
   }, []);
 
-  const handleSyncGdelt = async () => {
+  const handleSyncGdelt = async (query?: string) => {
     try {
       setSyncingGdelt(true);
-      const res = await api.syncGDELT(25);
+      const q = query !== undefined ? query : customGdeltQuery;
+      const res = await api.syncGDELT(25, q || undefined);
       setBannerAlert(`GDELT Sync Completed: ${res.ingested} new articles ingested, ${res.skipped_duplicates} duplicates skipped.`);
       await fetchStatuses();
       await fetchContent();
@@ -148,12 +147,12 @@ export const LiveDataPage: React.FC = () => {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 800, color: '#F9FAFB' }}>
             Live Public Data Ingestion & Telemetry
           </Typography>
-          <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
+          <Typography variant="body2" sx={{ color: '#94A3B8' }}>
             Real-time public news streams from GDELT Project DOC 2.0 API and Open RSS feeds passing through the ML detection pipeline.
           </Typography>
         </Box>
@@ -172,17 +171,17 @@ export const LiveDataPage: React.FC = () => {
               fetchStatuses();
               fetchContent();
             }}
-            sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#9CA3AF' }}
+            sx={{ borderColor: 'rgba(255,255,255,0.1)', color: '#94A3B8' }}
           >
             Refresh Feed
           </Button>
         </Box>
       </Box>
 
-      {/* Mandatory Real vs Synthetic Safeguards Banner */}
+      {/* Mandatory Safeguards Banner */}
       <DisclaimerAlert type="privacy" />
 
-      {/* Live Action Banner Alert if new items ingested */}
+      {/* Live Action Banner Alert */}
       {bannerAlert && (
         <Alert
           severity="info"
@@ -195,13 +194,13 @@ export const LiveDataPage: React.FC = () => {
 
       {/* Top Monitoring Panel: Data Source Status Cards */}
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        {/* Card 1: GDELT Project (Primary Source) */}
+        {/* Card 1: GDELT Project */}
         <Grid item xs={12} md={4}>
           <Paper
             sx={{
               p: 2.5,
               height: '100%',
-              backgroundColor: '#0F172A',
+              backgroundColor: '#0E1726',
               border: '1.5px solid #3B82F6',
               borderRadius: 2.5,
               boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)',
@@ -211,37 +210,82 @@ export const LiveDataPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Globe size={20} color="#60A5FA" />
                 <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#F9FAFB' }}>
-                  GDELT Project
+                  GDELT Project (DOC 2.0)
                 </Typography>
               </Box>
               <Chip
                 size="small"
-                label={gdeltStatus?.status || 'CONNECTED'}
+                label={
+                  gdeltStatus?.status === 'RATE_LIMITED'
+                    ? 'RATE-LIMITED (FALLBACK ACTIVE)'
+                    : gdeltStatus?.status === 'ERROR'
+                    ? 'ERROR'
+                    : gdeltStatus?.status || 'CONNECTED'
+                }
                 sx={{
-                  bgcolor: gdeltStatus?.status === 'ERROR' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                  color: gdeltStatus?.status === 'ERROR' ? '#F87171' : '#34D399',
+                  bgcolor:
+                    gdeltStatus?.status === 'ERROR'
+                      ? 'rgba(239, 68, 68, 0.2)'
+                      : gdeltStatus?.status === 'RATE_LIMITED'
+                      ? 'rgba(245, 158, 11, 0.2)'
+                      : 'rgba(16, 185, 129, 0.2)',
+                  color:
+                    gdeltStatus?.status === 'ERROR'
+                      ? '#F87171'
+                      : gdeltStatus?.status === 'RATE_LIMITED'
+                      ? '#FBBF24'
+                      : '#34D399',
                   fontWeight: 800,
                   fontSize: '0.68rem',
                 }}
               />
             </Box>
 
-            <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1.5 }}>
-              Free, publicly accessible global news intelligence API. No API key required.
+            <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 1.5 }}>
+              {gdeltStatus?.status === 'RATE_LIMITED'
+                ? 'Public GDELT API rate-limit reached. Operating with resilient real-world open intelligence stream.'
+                : 'Free, publicly accessible global news intelligence API. No API key required.'}
             </Typography>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Total Ingested:</Typography>
-              <Typography variant="caption" sx={{ color: '#F3F4F6', fontWeight: 700 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Total Ingested:</Typography>
+              <Typography variant="caption" sx={{ color: '#F3F4F6', fontWeight: 800 }}>
                 {gdeltStatus?.total_ingested || 0} articles
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Duplicates Filtered:</Typography>
-              <Typography variant="caption" sx={{ color: '#34D399', fontWeight: 700 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Duplicates Filtered:</Typography>
+              <Typography variant="caption" sx={{ color: '#34D399', fontWeight: 800 }}>
                 {gdeltStatus?.duplicates_skipped || 0} skipped
               </Typography>
+            </Box>
+
+            {/* Custom On-The-Fly GDELT Search Field */}
+            <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Custom topic (e.g. AI, election, cyber)..."
+                value={customGdeltQuery}
+                onChange={(e) => setCustomGdeltQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSyncGdelt();
+                }}
+                sx={{
+                  backgroundColor: '#070B14',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(59, 130, 246, 0.4)' },
+                }}
+              />
+              <Button
+                variant="contained"
+                size="small"
+                disabled={syncingGdelt}
+                onClick={() => handleSyncGdelt()}
+                sx={{ minWidth: 42, px: 1.5, background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
+              >
+                <Send size={14} />
+              </Button>
             </Box>
 
             <Button
@@ -250,21 +294,21 @@ export const LiveDataPage: React.FC = () => {
               variant="contained"
               disabled={syncingGdelt}
               startIcon={syncingGdelt ? <CircularProgress size={14} color="inherit" /> : <Zap size={14} />}
-              onClick={handleSyncGdelt}
+              onClick={() => handleSyncGdelt('')}
               sx={{ background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
             >
-              {syncingGdelt ? 'Polling GDELT API...' : '⚡ Sync GDELT News Now'}
+              {syncingGdelt ? 'Polling GDELT API...' : '⚡ Poll Global News Feed'}
             </Button>
           </Paper>
         </Grid>
 
-        {/* Card 2: Public RSS Feeds (Optional Source) */}
+        {/* Card 2: Public RSS Feeds */}
         <Grid item xs={12} md={4}>
           <Paper
             sx={{
               p: 2.5,
               height: '100%',
-              backgroundColor: '#0F172A',
+              backgroundColor: '#0E1726',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: 2.5,
             }}
@@ -283,19 +327,19 @@ export const LiveDataPage: React.FC = () => {
               />
             </Box>
 
-            <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1.5 }}>
+            <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 1.5 }}>
               Public news feeds configured via environment variables (BBC, NYT, Reuters).
             </Typography>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Total Ingested:</Typography>
-              <Typography variant="caption" sx={{ color: '#F3F4F6', fontWeight: 700 }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Total Ingested:</Typography>
+              <Typography variant="caption" sx={{ color: '#F3F4F6', fontWeight: 800 }}>
                 {rssStatus?.total_ingested || 0} articles
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Status:</Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Status:</Typography>
               <Typography variant="caption" sx={{ color: '#93C5FD', fontWeight: 700 }}>
                 Configurable in .env
               </Typography>
@@ -315,13 +359,13 @@ export const LiveDataPage: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Card 3: Bluesky Public Stream (Optional Interface) */}
+        {/* Card 3: Bluesky Public Stream */}
         <Grid item xs={12} md={4}>
           <Paper
             sx={{
               p: 2.5,
               height: '100%',
-              backgroundColor: '#0F172A',
+              backgroundColor: '#0E1726',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: 2.5,
             }}
@@ -340,20 +384,20 @@ export const LiveDataPage: React.FC = () => {
               />
             </Box>
 
-            <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1.5 }}>
+            <Typography variant="caption" sx={{ color: '#94A3B8', display: 'block', mb: 1.5 }}>
               Modular ATProto public firehose interface. Ready for public stream activation.
             </Typography>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Endpoint:</Typography>
-              <Typography variant="caption" sx={{ color: '#9CA3AF', fontFamily: 'monospace' }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Endpoint:</Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8', fontFamily: 'monospace' }}>
                 public.api.bsky.app
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Status:</Typography>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>Status:</Typography>
+              <Typography variant="caption" sx={{ color: '#94A3B8' }}>
                 Optional Module
               </Typography>
             </Box>
@@ -363,7 +407,7 @@ export const LiveDataPage: React.FC = () => {
               size="small"
               variant="outlined"
               disabled
-              sx={{ borderColor: 'rgba(255,255,255,0.08)', color: '#6B7280' }}
+              sx={{ borderColor: 'rgba(255,255,255,0.08)', color: '#64748B' }}
             >
               Public Stream Standby
             </Button>
@@ -372,9 +416,9 @@ export const LiveDataPage: React.FC = () => {
       </Grid>
 
       {/* Filter and Search Toolbar */}
-      <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, backgroundColor: '#0E1726', border: '1px solid rgba(255,255,255,0.08)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 700, mr: 1 }}>
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, mr: 1 }}>
             Topics Filter:
           </Typography>
           {['ALL', 'Disinformation', 'AI', 'Generative ai', 'Cyberattack', 'Security', 'Election', 'Technology'].map((topic) => (
@@ -394,21 +438,22 @@ export const LiveDataPage: React.FC = () => {
           ))}
         </Box>
 
-        <Box sx={{ minWidth: 260 }}>
+        <Box sx={{ minWidth: 280 }}>
           <TextField
             size="small"
+            fullWidth
             placeholder="Search headline, text, domain..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search size={16} color="#9CA3AF" />
+                  <Search size={16} color="#94A3B8" />
                 </InputAdornment>
               ),
             }}
             sx={{
-              backgroundColor: '#090D16',
+              backgroundColor: '#070B14',
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
             }}
           />
@@ -422,7 +467,7 @@ export const LiveDataPage: React.FC = () => {
       </Typography>
 
       {loading ? (
-        <Paper sx={{ p: 6, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Paper sx={{ p: 6, display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0E1726' }}>
           <CircularProgress />
         </Paper>
       ) : filteredItems.length > 0 ? (
@@ -434,7 +479,7 @@ export const LiveDataPage: React.FC = () => {
                 key={item.id}
                 sx={{
                   p: 2.5,
-                  backgroundColor: '#0F172A',
+                  backgroundColor: '#0E1726',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: 2.5,
                   transition: 'all 0.15s ease',
@@ -445,22 +490,22 @@ export const LiveDataPage: React.FC = () => {
                 }}
               >
                 {/* Header Row */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                     <Chip
                       size="small"
                       label="REAL-WORLD"
                       sx={{ bgcolor: 'rgba(16, 185, 129, 0.2)', color: '#34D399', fontWeight: 800, fontSize: '0.65rem' }}
                     />
-                    <Typography variant="caption" sx={{ color: '#60A5FA', fontWeight: 700 }}>
+                    <Typography variant="caption" sx={{ color: '#60A5FA', fontWeight: 800 }}>
                       {item.source_name || 'GDELT'}
                     </Typography>
                     {item.country && item.country !== 'Unknown' && (
-                      <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
+                      <Typography variant="caption" sx={{ color: '#94A3B8' }}>
                         • {item.country}
                       </Typography>
                     )}
-                    <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                    <Typography variant="caption" sx={{ color: '#64748B' }}>
                       • Ingested: {new Date(item.ingested_at).toLocaleTimeString()}
                     </Typography>
                   </Box>
@@ -492,12 +537,12 @@ export const LiveDataPage: React.FC = () => {
                 </Box>
 
                 {/* Title / Headline */}
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 1, fontSize: '1.05rem' }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 1, fontSize: '1.05rem' }}>
                   {item.title}
                 </Typography>
 
                 {/* Snippet */}
-                <Typography variant="body2" sx={{ color: '#D1D5DB', mb: 1.5, lineHeight: 1.5 }}>
+                <Typography variant="body2" sx={{ color: '#CBD5E1', mb: 1.5, lineHeight: 1.5 }}>
                   "{item.raw_text}"
                 </Typography>
 
@@ -521,7 +566,7 @@ export const LiveDataPage: React.FC = () => {
                       endIcon={<ExternalLink size={12} />}
                       sx={{ color: '#60A5FA', fontSize: '0.75rem', textTransform: 'none' }}
                     >
-                      View Original Article
+                      View Original Source
                     </Button>
                   )}
                 </Box>
@@ -565,9 +610,9 @@ export const LiveDataPage: React.FC = () => {
           })}
         </Box>
       ) : (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="body2" sx={{ color: '#6B7280' }}>
-            No real-world articles match your current filter. Click "Sync GDELT News Now" above to poll recent global intelligence feeds.
+        <Paper sx={{ p: 4, textAlign: 'center', backgroundColor: '#0E1726' }}>
+          <Typography variant="body2" sx={{ color: '#64748B' }}>
+            No real-world articles match your current filter. Click "Poll Global News Feed" above to poll recent global intelligence feeds.
           </Typography>
         </Paper>
       )}

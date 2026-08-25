@@ -17,6 +17,10 @@ import {
   UserCheck,
   Sparkles,
   GitBranch,
+  Play,
+  RotateCcw,
+  ShieldCheck,
+  Activity,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DetectionResultResponse } from '../types';
@@ -92,8 +96,8 @@ export const ContentAnalysisPage: React.FC = () => {
         <Typography variant="h4" sx={{ fontWeight: 800, color: '#F9FAFB' }}>
           Multi-Model Content Analysis & Estimation Workbench
         </Typography>
-        <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
-          AI Text Detection: TF-IDF Logistic Regression, GLTR Statistical Token Likelihood, and Watermark Audit
+        <Typography variant="body2" sx={{ color: '#94A3B8' }}>
+          Ensemble AI Detection: TF-IDF Logistic Regression, GLTR Statistical Token Likelihood, Kirchenbauer Watermark, and Stylometric Features.
         </Typography>
       </Box>
 
@@ -101,14 +105,14 @@ export const ContentAnalysisPage: React.FC = () => {
       <DisclaimerAlert type="detection" />
 
       {/* Input Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 1.5 }}>
+      <Paper sx={{ p: 3, mb: 3, backgroundColor: '#0E1726', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 1.5 }}>
           Investigative Text Ingestion
         </Typography>
 
         {/* Preset Sample Selector */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'flex', alignItems: 'center', mr: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700, mr: 0.5 }}>
             Benchmark Presets:
           </Typography>
           {SAMPLE_PRESETS.map((preset, idx) => (
@@ -125,6 +129,7 @@ export const ContentAnalysisPage: React.FC = () => {
                 bgcolor: inputText === preset.text ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.05)',
                 color: inputText === preset.text ? '#93C5FD' : '#D1D5DB',
                 border: inputText === preset.text ? '1px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.1)',
+                fontWeight: inputText === preset.text ? 800 : 500,
                 '&:hover': { bgcolor: 'rgba(59, 130, 246, 0.2)' },
               }}
             />
@@ -140,7 +145,7 @@ export const ContentAnalysisPage: React.FC = () => {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           sx={{
-            backgroundColor: '#090D16',
+            backgroundColor: '#070B14',
             borderRadius: 2,
             mb: 2,
             '& .MuiOutlinedInput-root': {
@@ -151,19 +156,34 @@ export const ContentAnalysisPage: React.FC = () => {
           }}
         />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="caption" sx={{ color: '#6B7280' }}>
-            Text Length: {inputText.length} characters | Word Count: {inputText.trim().split(/\s+/).filter(Boolean).length}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
+          <Typography variant="caption" sx={{ color: '#64748B' }}>
+            Text Length: <strong>{inputText.length}</strong> chars | Word Count: <strong>{inputText.trim().split(/\s+/).filter(Boolean).length}</strong>
           </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Sparkles size={18} />}
-            onClick={handleAnalyze}
-            disabled={loading || !inputText.trim()}
-          >
-            {loading ? 'Evaluating Multi-Model Pipeline...' : 'Run Detection Pipeline'}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <Button
+              variant="outlined"
+              size="medium"
+              startIcon={<RotateCcw size={16} />}
+              onClick={() => {
+                setInputText('');
+                setResult(null);
+              }}
+              sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#94A3B8' }}
+            >
+              Clear
+            </Button>
+            <Button
+              variant="contained"
+              size="medium"
+              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Sparkles size={18} />}
+              onClick={handleAnalyze}
+              disabled={loading || !inputText.trim()}
+              sx={{ background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' }}
+            >
+              {loading ? 'Evaluating Pipeline...' : 'Run Detection Pipeline'}
+            </Button>
+          </Box>
         </Box>
       </Paper>
 
@@ -172,15 +192,15 @@ export const ContentAnalysisPage: React.FC = () => {
         <Grid container spacing={3}>
           {/* Left Column: Classification Badge & Score breakdown */}
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 2 }}>
+            <Paper sx={{ p: 3, height: '100%', backgroundColor: '#0E1726', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 2 }}>
                 Linguistic Classifier Verdict
               </Typography>
 
               <Box
                 sx={{
                   p: 2.5,
-                  borderRadius: 2,
+                  borderRadius: 2.5,
                   textAlign: 'center',
                   backgroundColor: result.classification === 'AI_GENERATED' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                   border: `1.5px solid ${result.classification === 'AI_GENERATED' ? '#EF4444' : '#10B981'}`,
@@ -189,23 +209,23 @@ export const ContentAnalysisPage: React.FC = () => {
               >
                 <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
                   {result.classification === 'AI_GENERATED' ? (
-                    <Bot size={36} color="#F87171" />
+                    <Bot size={38} color="#F87171" />
                   ) : (
-                    <UserCheck size={36} color="#34D399" />
+                    <UserCheck size={38} color="#34D399" />
                   )}
                 </Box>
                 <Typography variant="h5" sx={{ fontWeight: 800, color: result.classification === 'AI_GENERATED' ? '#F87171' : '#34D399' }}>
                   {result.classification.replace('_', ' ')}
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
-                  Model Confidence: {(result.confidence * 100).toFixed(1)}%
+                <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                  Model Confidence: <strong>{(result.confidence * 100).toFixed(1)}%</strong>
                 </Typography>
               </Box>
 
               {/* Calibrated AI Probability Meter */}
               <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-                  <Typography variant="body2" sx={{ color: '#9CA3AF', fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ color: '#94A3B8', fontWeight: 700 }}>
                     AI-Generation Probability
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#F3F4F6', fontWeight: 800, fontFamily: 'monospace' }}>
@@ -227,27 +247,27 @@ export const ContentAnalysisPage: React.FC = () => {
               </Box>
 
               {/* Watermark Status */}
-              <Box sx={{ mb: 3, p: 2, borderRadius: 2, backgroundColor: '#090D16', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Watermark Verification
+              <Box sx={{ mb: 3, p: 2, borderRadius: 2, backgroundColor: '#070B14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 800, textTransform: 'uppercase' }}>
+                  Cryptographic Watermark Verification
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: result.watermark_result.status === 'DETECTED' ? '#34D399' : '#9CA3AF' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 800, color: result.watermark_result.status === 'DETECTED' ? '#34D399' : '#94A3B8' }}>
                     {result.watermark_result.status}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                  <Typography variant="caption" sx={{ color: '#64748B' }}>
                     {result.watermark_result.scheme}
                   </Typography>
                 </Box>
               </Box>
 
               {/* Diagnostic Indicators */}
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 1 }}>
-                Synthesized Indicators
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 1 }}>
+                Diagnostic Evidentiary Indicators
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, mb: 3 }}>
                 {result.indicators.map((ind, idx) => (
-                  <Typography key={idx} variant="caption" sx={{ color: '#D1D5DB', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography key={idx} variant="caption" sx={{ color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     • {ind}
                   </Typography>
                 ))}
@@ -255,27 +275,30 @@ export const ContentAnalysisPage: React.FC = () => {
 
               {/* Track in Part 2 Provenance button */}
               {result.content_id && (
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="primary"
-                  startIcon={<GitBranch size={16} />}
-                  onClick={() => navigate(`/provenance?contentId=${result.content_id}`)}
-                >
-                  Track Lineage in Provenance DAG
-                </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<GitBranch size={16} />}
+                    onClick={() => navigate(`/provenance?contentId=${result.content_id}`)}
+                    sx={{ borderColor: 'rgba(59, 130, 246, 0.4)', color: '#93C5FD' }}
+                  >
+                    Track Lineage in Provenance DAG
+                  </Button>
+                </Box>
               )}
             </Paper>
           </Grid>
 
           {/* Right Column: GLTR Token Distribution & Stylometric Features */}
           <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 1 }}>
-                GLTR-Style Statistical Token Rank Breakdown
+            <Paper sx={{ p: 3, height: '100%', backgroundColor: '#0E1726', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 0.5 }}>
+                GLTR-Style Statistical Token Likelihood Inspection
               </Typography>
-              <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-                Tokens colored by statistical likelihood: Green (Top 10), Yellow (Top 100), Red (Top 1000), Purple (Tail).
+              <Typography variant="body2" sx={{ color: '#94A3B8', mb: 2 }}>
+                Tokens colored by ranking tier. Click any token to inspect its exact rank and probability metrics.
               </Typography>
 
               <GLTRViewer gltrResult={result.gltr_result} />
@@ -283,38 +306,38 @@ export const ContentAnalysisPage: React.FC = () => {
               <Divider sx={{ my: 3, borderColor: 'rgba(255, 255, 255, 0.08)' }} />
 
               {/* Stylometric Feature Grid */}
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 2 }}>
-                Stylometric & Entropy Features
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#F9FAFB', mb: 2 }}>
+                Stylometric Entropy & Text Statistics
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6} sm={3}>
-                  <Box sx={{ p: 1.5, borderRadius: 1.5, backgroundColor: '#090D16', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Burstiness Variance</Typography>
-                    <Typography variant="h6" sx={{ color: '#F3F4F6', fontFamily: 'monospace' }}>
+                  <Box sx={{ p: 1.8, borderRadius: 2, backgroundColor: '#070B14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>Burstiness Variance</Typography>
+                    <Typography variant="h6" sx={{ color: '#F9FAFB', fontFamily: 'monospace', fontWeight: 800 }}>
                       {result.statistical_features.burstiness}
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Box sx={{ p: 1.5, borderRadius: 1.5, backgroundColor: '#090D16', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Shannon Entropy</Typography>
-                    <Typography variant="h6" sx={{ color: '#F3F4F6', fontFamily: 'monospace' }}>
+                  <Box sx={{ p: 1.8, borderRadius: 2, backgroundColor: '#070B14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>Shannon Entropy</Typography>
+                    <Typography variant="h6" sx={{ color: '#F9FAFB', fontFamily: 'monospace', fontWeight: 800 }}>
                       {result.statistical_features.shannon_entropy}
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Box sx={{ p: 1.5, borderRadius: 1.5, backgroundColor: '#090D16', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Lexical TTR Ratio</Typography>
-                    <Typography variant="h6" sx={{ color: '#F3F4F6', fontFamily: 'monospace' }}>
+                  <Box sx={{ p: 1.8, borderRadius: 2, backgroundColor: '#070B14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>Lexical TTR Ratio</Typography>
+                    <Typography variant="h6" sx={{ color: '#F9FAFB', fontFamily: 'monospace', fontWeight: 800 }}>
                       {result.statistical_features.lexical_diversity_ttr}
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Box sx={{ p: 1.5, borderRadius: 1.5, backgroundColor: '#090D16', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>Avg Word Length</Typography>
-                    <Typography variant="h6" sx={{ color: '#F3F4F6', fontFamily: 'monospace' }}>
+                  <Box sx={{ p: 1.8, borderRadius: 2, backgroundColor: '#070B14', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Typography variant="caption" sx={{ color: '#94A3B8', fontWeight: 700 }}>Avg Word Length</Typography>
+                    <Typography variant="h6" sx={{ color: '#F9FAFB', fontFamily: 'monospace', fontWeight: 800 }}>
                       {result.statistical_features.avg_word_length}
                     </Typography>
                   </Box>

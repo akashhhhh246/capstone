@@ -10,6 +10,8 @@ from app.ml.detection.watermark_detector import KirchenbauerWatermarkDetector
 from app.domain.entities.models import Content, DetectionResult
 from app.application.dto.schemas import DetectionResultResponse, ClassifierResult, GLTRResult, WatermarkResult
 
+from app.infrastructure.configuration.config import settings
+
 class DetectionService:
     """
     Combined Detection Service.
@@ -22,8 +24,7 @@ class DetectionService:
     """
 
     def __init__(self, model_path: Optional[str] = None):
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        default_model_path = os.path.join(base_dir, "models", "tfidf_classifier.joblib")
+        default_model_path = settings.TFIDF_MODEL_PATH
         self.classifier = TFIDFContentClassifier(model_path=model_path or default_model_path)
         self.gltr_analyzer = GLTRStatisticalAnalyzer()
         self.watermark_detector = KirchenbauerWatermarkDetector()
@@ -43,7 +44,7 @@ class DetectionService:
         
         # 1. Classifier evaluation
         p_human, p_ai = self.classifier.predict_proba(clean)
-        pred_class = "AI_GENERATED" if p_ai >= 0.50 else "HUMAN"
+        pred_class = "AI_GENERATED" if p_ai > 0.55 else "HUMAN"
         confidence = round(max(p_human, p_ai), 4)
         clf_meta = self.classifier.get_model_metadata()
 
