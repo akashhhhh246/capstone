@@ -32,33 +32,39 @@ from app.application.services.ingestion_service import IngestionService
 logging.basicConfig(level=settings.LOG_LEVEL)
 logger = logging.getLogger("provenance_defense_api")
 
-background_ingestion_task = None
+def _run_background_sync(ingestion_service: IngestionService):
+    """Synchronous worker executed in separate thread to avoid blocking asyncio event loop."""
+    db = SessionLocal()
+    try:
+        if settings.GDELT_ENABLED:
+            logger.info("Executing automated periodic GDELT news sync...")
+            ingestion_service.ingest_from_source("gdelt", db, limit=settings.GDELT_MAX_RESULTS)
+        if settings.RSS_ENABLED:
+            logger.info("Executing automated periodic RSS feed sync...")
+            ingestion_service.ingest_from_source("rss", db, limit=15)
+    except Exception as e:
+        logger.warning(f"Background data sync notice: {e}")
+    finally:
+        db.close()
 
 async def periodic_ingestion_worker():
-    """Background worker periodically polling GDELT and RSS feeds."""
+    """Background worker periodically polling GDELT and RSS feeds without blocking."""
     ingestion_service = IngestionService()
     logger.info("Started periodic real-time public data ingestion background worker.")
     
-    # Wait 10 seconds after server boot before first sync
-    await asyncio.sleep(10)
+    # Wait 30 seconds after server boot to prioritize health checks and UI availability
+    await asyncio.sleep(30)
     
     while True:
         try:
-            db = SessionLocal()
-            try:
-                if settings.GDELT_ENABLED:
-                    logger.info("Executing automated periodic GDELT news sync...")
-                    ingestion_service.ingest_from_source("gdelt", db, limit=settings.GDELT_MAX_RESULTS)
-                if settings.RSS_ENABLED:
-                    logger.info("Executing automated periodic RSS feed sync...")
-                    ingestion_service.ingest_from_source("rss", db, limit=15)
-            finally:
-                db.close()
+            await asyncio.to_thread(_run_background_sync, ingestion_service)
+        except asyncio.CancelledError:
+            break
         except Exception as e:
             logger.error(f"Error in periodic ingestion worker: {e}")
 
         # Sleep for configured polling interval
-        poll_seconds = max(settings.GDELT_POLL_INTERVAL, 60)
+        poll_seconds = max(settings.GDELT_POLL_INTERVAL, 180)
         await asyncio.sleep(poll_seconds)
 
 @asynccontextmanager

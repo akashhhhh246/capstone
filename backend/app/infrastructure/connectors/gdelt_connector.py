@@ -95,7 +95,7 @@ class GDELTConnector(DataSourceConnector):
                 }
             )
 
-            with urllib.request.urlopen(req, timeout=12) as response:
+            with urllib.request.urlopen(req, timeout=5) as response:
                 if response.status != 200:
                     self.last_error = f"HTTP status {response.status}"
                     self.status = "ERROR"
