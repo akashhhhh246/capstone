@@ -44,7 +44,7 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
     const nonRootNodes = filteredNodes.filter((n) => !n.is_target);
 
     const result: Node[] = [];
-    const nodeWidth = 260;
+    const nodeWidth = 280;
     const spacing = 80;
     const count = Math.max(1, nonRootNodes.length);
     const totalRowWidth = count * nodeWidth + (count - 1) * spacing;
@@ -60,14 +60,14 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
         targetPosition: Position.Top,
         data: {
           label: (
-            <Box sx={{ p: 1.5, width: nodeWidth - 30, textAlign: 'center' }}>
+            <Box sx={{ p: 2, width: '100%', boxSizing: 'border-box', textAlign: 'center' }}>
               <Chip
                 size="small"
                 label="👑 ORIGINAL ROOT SEED"
                 sx={{ bgcolor: 'rgba(59, 130, 246, 0.25)', color: '#60A5FA', fontWeight: 800, mb: 0.8 }}
               />
               <Typography variant="body2" sx={{ fontWeight: 800, color: '#FFF', mb: 0.5 }}>
-                {n.platform ? `Published on ${n.platform}` : 'Original Seed'}
+                {n.platform ? `Source: ${n.platform}` : 'Original Seed'}
               </Typography>
               <Typography
                 variant="caption"
@@ -78,6 +78,7 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                   lineHeight: 1.4,
+                  wordBreak: 'break-word',
                 }}
               >
                 "{n.full_text || n.text}"
@@ -87,10 +88,14 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
           raw: n,
         },
         style: {
+          width: nodeWidth,
+          boxSizing: 'border-box',
           backgroundColor: '#1E1B4B',
           border: '2px solid #3B82F6',
-          borderRadius: 12,
+          borderRadius: 14,
           boxShadow: '0 0 24px rgba(59, 130, 246, 0.4)',
+          overflow: 'hidden',
+          padding: 0,
         },
       });
     });
@@ -126,7 +131,7 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
         targetPosition: Position.Top,
         data: {
           label: (
-            <Box sx={{ p: 1.2, width: nodeWidth - 30 }}>
+            <Box sx={{ p: 1.5, width: '100%', boxSizing: 'border-box' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                 <Chip
                   size="small"
@@ -149,6 +154,7 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                   lineHeight: 1.3,
+                  wordBreak: 'break-word',
                 }}
               >
                 "{n.full_text || n.text}"
@@ -158,10 +164,14 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
           raw: n,
         },
         style: {
+          width: nodeWidth,
+          boxSizing: 'border-box',
           backgroundColor: '#111827',
           border: `1.5px solid ${borderColor}`,
-          borderRadius: 10,
+          borderRadius: 12,
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          overflow: 'hidden',
+          padding: 0,
         },
       });
     });
@@ -186,17 +196,78 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
       }));
   }, [rawEdges, activeIds]);
 
+  const hasDerivatives = filteredNodes.some((n) => !n.is_target);
+
   return (
     <Paper
       sx={{
+        position: 'relative',
         width: '100%',
         height: 580,
         backgroundColor: '#070B14',
         borderRadius: 3,
         border: '1px solid rgba(255, 255, 255, 0.08)',
         overflow: 'hidden',
+        // Dark theme overrides for React Flow controls & handles
+        '& .react-flow__controls': {
+          backgroundColor: '#0F172A',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+        },
+        '& .react-flow__controls-button': {
+          backgroundColor: '#1E293B',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          fill: '#94A3B8',
+          color: '#94A3B8',
+          transition: 'all 0.15s ease',
+          '&:hover': {
+            backgroundColor: '#334155',
+            fill: '#60A5FA',
+          },
+          '& svg': {
+            fill: '#94A3B8',
+          },
+        },
+        '& .react-flow__handle': {
+          backgroundColor: '#3B82F6',
+          border: '2px solid #60A5FA',
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+        },
+        '& .react-flow__node': {
+          padding: 0,
+        },
+        '& .react-flow__attribution': {
+          display: 'none',
+        },
       }}
     >
+      {!hasDerivatives && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            bgcolor: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(59, 130, 246, 0.35)',
+            borderRadius: 2,
+            px: 2.5,
+            py: 0.8,
+            pointerEvents: 'none',
+          }}
+        >
+          <Typography variant="caption" sx={{ color: '#93C5FD', fontWeight: 700 }}>
+            Standalone Root Content • No mutated derivatives found in repository
+          </Typography>
+        </Box>
+      )}
+
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
@@ -209,7 +280,7 @@ export const ProvenanceGraph: React.FC<ProvenanceGraphProps> = ({
         fitViewOptions={{ padding: 0.35, maxZoom: 1.1 }}
       >
         <Background color="#1E293B" gap={20} />
-        <Controls style={{ backgroundColor: '#111827', borderColor: 'rgba(255,255,255,0.1)', color: '#FFF' }} />
+        <Controls />
         <MiniMap
           nodeColor={(n) => (n.style?.borderColor as string) || '#3B82F6'}
           maskColor="rgba(0, 0, 0, 0.75)"

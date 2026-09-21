@@ -61,6 +61,18 @@ class ProvenanceEngine:
                 if cid not in content_accounts:
                     content_accounts[cid] = p.get("account_handle", "@author")
 
+        target_platform = (
+            content_platforms.get(target_id)
+            or target_content.get("source_name")
+            or (f"{target_content.get('source_type').upper()} Feed" if target_content.get("source_type") else None)
+            or "Direct Input"
+        )
+        target_account = (
+            content_accounts.get(target_id)
+            or target_content.get("author")
+            or ("@news_wire" if target_content.get("source_type") == "rss" else "@analyst")
+        )
+
         # 1. Add Target Node (Root Seed)
         nodes_map[target_id] = {
             "id": target_id,
@@ -69,8 +81,8 @@ class ProvenanceEngine:
             "text": target_text[:120] + "..." if len(target_text) > 120 else target_text,
             "full_text": target_text,
             "created_at": str(target_created) if target_created else "",
-            "platform": content_platforms.get(target_id, "SimuTwitter"),
-            "account": content_accounts.get(target_id, "@root_author"),
+            "platform": target_platform,
+            "account": target_account,
             "is_target": True,
             "similarity": 1.0,
             "relationship": "ORIGIN_ROOT",
@@ -98,15 +110,27 @@ class ProvenanceEngine:
                 if rel_type == "UNRELATED":
                     continue
 
+                m_platform = (
+                    content_platforms.get(m_id)
+                    or match.get("source_name")
+                    or (f"{match.get('source_type').upper()} Feed" if match.get("source_type") else None)
+                    or "SimuRelay"
+                )
+                m_account = (
+                    content_accounts.get(m_id)
+                    or match.get("author")
+                    or "@echo_node"
+                )
+
                 nodes_map[m_id] = {
                     "id": m_id,
-                    "label": f"{rel_type.replace('_', ' ')} ({m_id[:8]})",
+                    "label": f"Derivative ({m_id[:8]})",
                     "type": "CONTENT",
                     "text": m_text[:120] + "..." if len(m_text) > 120 else m_text,
                     "full_text": m_text,
                     "created_at": str(m_created) if m_created else "",
-                    "platform": content_platforms.get(m_id, "SimuTelegram"),
-                    "account": content_accounts.get(m_id, "@echo_node"),
+                    "platform": m_platform,
+                    "account": m_account,
                     "is_target": False,
                     "similarity": round(sim, 3),
                     "relationship": rel_type,
@@ -143,8 +167,8 @@ class ProvenanceEngine:
             "id": target_id,
             "created_at": target_created,
             "text_preview": target_text[:100],
-            "platform": content_platforms.get(target_id, "SimuTwitter"),
-            "account": content_accounts.get(target_id, "@root_author")
+            "platform": target_platform,
+            "account": target_account
         }
 
         return {

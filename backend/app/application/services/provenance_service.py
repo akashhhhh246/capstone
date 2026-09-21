@@ -38,6 +38,9 @@ class ProvenanceService:
         target_dict = {
             "id": target_content_rec.id,
             "text": target_content_rec.raw_text,
+            "source_name": target_content_rec.source_name,
+            "source_type": target_content_rec.source_type,
+            "author": target_content_rec.author,
             "created_at": target_content_rec.created_at.isoformat() if target_content_rec.created_at else None,
             "classification": target_content_rec.detection_results[0].classification if target_content_rec.detection_results else "UNKNOWN"
         }
@@ -48,6 +51,9 @@ class ProvenanceService:
             {
                 "id": c.id,
                 "text": c.raw_text,
+                "source_name": c.source_name,
+                "source_type": c.source_type,
+                "author": c.author,
                 "created_at": c.created_at.isoformat() if c.created_at else None,
                 "classification": c.detection_results[0].classification if c.detection_results else "UNKNOWN"
             }
