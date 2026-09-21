@@ -1,6 +1,6 @@
 import os
 from typing import List, Union
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
 # Base backend directory
@@ -58,6 +58,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000"
     ]
     
+    # Enterprise Production Settings
+    SECURITY_HEADERS_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = 120
+    
     @field_validator("CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str) and not v.startswith("["):
@@ -66,8 +70,9 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 settings = Settings()

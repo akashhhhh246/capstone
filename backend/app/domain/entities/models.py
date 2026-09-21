@@ -82,12 +82,12 @@ class Content(Base):
     clean_text = Column(Text, nullable=False)
     url = Column(String(500), nullable=True, index=True)
     source_name = Column(String(100), nullable=True)  # e.g., 'GDELT', 'Reuters RSS', 'Benchmark'
-    source_type = Column(String(50), nullable=True)   # 'gdelt', 'rss', 'bluesky', 'user_input', 'sample_dataset'
+    source_type = Column(String(50), nullable=True, index=True)   # 'gdelt', 'rss', 'bluesky', 'user_input', 'sample_dataset'
     author = Column(String(100), nullable=True)
     published_at = Column(DateTime, nullable=True)
     ingested_at = Column(DateTime, default=get_utc_now)
     source_label = Column(String(50), nullable=True)
-    domain = Column(String(50), default="general")
+    domain = Column(String(50), default="general", index=True)
     language = Column(String(10), default="en")
     country = Column(String(50), nullable=True)
     topics = Column(JSON, default=list)
@@ -95,7 +95,7 @@ class Content(Base):
     data_origin = Column(String(30), default="REAL_WORLD")  # REAL_WORLD, SYNTHETIC, SIMULATED
     word_count = Column(Integer, default=0)
     char_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=get_utc_now)
+    created_at = Column(DateTime, default=get_utc_now, index=True)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
@@ -118,7 +118,7 @@ class DetectionResult(Base):
     statistical_features = Column(JSON, default=dict)  # burstiness, avg_word_len, entropy
     indicators = Column(JSON, default=list)  # list of textual explanation tags
     is_heuristic_fallback = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=get_utc_now)
+    created_at = Column(DateTime, default=get_utc_now, index=True)
 
     content = relationship("Content", back_populates="detection_results")
 
@@ -143,7 +143,7 @@ class Platform(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(100), unique=True, nullable=False)  # e.g. 'SimuTwitter', 'SimuTelegram'
-    platform_type = Column(String(50), default="microblogging")  # microblogging, messaging, forum, news
+    platform_type = Column(String(50), default="microblogging", index=True)  # microblogging, messaging, forum, news
     risk_weight = Column(Float, default=1.0)
     description = Column(String(255), default="")
     icon_name = Column(String(50), default="share")
@@ -157,13 +157,13 @@ class SyntheticAccount(Base):
     __tablename__ = "synthetic_accounts"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    platform_id = Column(String(36), ForeignKey("platforms.id"), nullable=False)
+    platform_id = Column(String(36), ForeignKey("platforms.id"), nullable=False, index=True)
     pseudonym_handle = Column(String(100), nullable=False, index=True)
     account_age_days = Column(Integer, default=30)
     bot_probability = Column(Float, default=0.0)
     follower_count = Column(Integer, default=100)
     following_count = Column(Integer, default=100)
-    is_coordinated_actor = Column(Boolean, default=False)
+    is_coordinated_actor = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=get_utc_now)
 
     platform = relationship("Platform", back_populates="accounts")
@@ -177,8 +177,8 @@ class Campaign(Base):
     name = Column(String(150), nullable=False)
     objective = Column(String(255), default="")
     target_narrative = Column(Text, default="")
-    status = Column(String(20), default="ACTIVE")  # ACTIVE, CONTAINED, ARCHIVED
-    risk_score = Column(Float, default=0.0)
+    status = Column(String(20), default="ACTIVE", index=True)  # ACTIVE, CONTAINED, ARCHIVED
+    risk_score = Column(Float, default=0.0, index=True)
     gnn_risk_score = Column(Float, default=0.0)
     explainability_reasons = Column(JSON, default=list)  # list of explanatory strings
     total_events = Column(Integer, default=0)
@@ -186,7 +186,7 @@ class Campaign(Base):
     total_platforms = Column(Integer, default=1)
     velocity_events_per_hour = Column(Float, default=0.0)
     branching_factor = Column(Float, default=1.0)
-    created_at = Column(DateTime, default=get_utc_now)
+    created_at = Column(DateTime, default=get_utc_now, index=True)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     posts = relationship("Post", back_populates="campaign")
@@ -197,16 +197,16 @@ class Post(Base):
     __tablename__ = "posts"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    platform_id = Column(String(36), ForeignKey("platforms.id"), nullable=False)
-    account_id = Column(String(36), ForeignKey("synthetic_accounts.id"), nullable=False)
-    content_id = Column(String(36), ForeignKey("contents.id"), nullable=False)
-    parent_post_id = Column(String(36), ForeignKey("posts.id"), nullable=True)
-    campaign_id = Column(String(36), ForeignKey("campaigns.id"), nullable=True)
+    platform_id = Column(String(36), ForeignKey("platforms.id"), nullable=False, index=True)
+    account_id = Column(String(36), ForeignKey("synthetic_accounts.id"), nullable=False, index=True)
+    content_id = Column(String(36), ForeignKey("contents.id"), nullable=False, index=True)
+    parent_post_id = Column(String(36), ForeignKey("posts.id"), nullable=True, index=True)
+    campaign_id = Column(String(36), ForeignKey("campaigns.id"), nullable=True, index=True)
     post_type = Column(String(30), default="ORIGINAL")  # ORIGINAL, REPOST, REPLY, QUOTE, CROSS_PLATFORM
     likes = Column(Integer, default=0)
     reshares = Column(Integer, default=0)
     published_at = Column(DateTime, default=get_utc_now)
-    created_at = Column(DateTime, default=get_utc_now)
+    created_at = Column(DateTime, default=get_utc_now, index=True)
 
     platform = relationship("Platform", back_populates="posts")
     account = relationship("SyntheticAccount", back_populates="posts")
@@ -220,14 +220,14 @@ class PropagationEvent(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     simulation_id = Column(String(36), ForeignKey("simulation_runs.id"), nullable=True)
-    campaign_id = Column(String(36), ForeignKey("campaigns.id"), nullable=True)
+    campaign_id = Column(String(36), ForeignKey("campaigns.id"), nullable=True, index=True)
     event_type = Column(String(30), nullable=False)  # POST, RESHARE, REPLY, QUOTE, CROSS_PLATFORM_SHARE, CONTENT_VARIANT
     source_post_id = Column(String(36), nullable=True)
     target_post_id = Column(String(36), nullable=True)
     account_id = Column(String(36), nullable=False)
     platform_id = Column(String(36), nullable=False)
     content_id = Column(String(36), nullable=False)
-    timestamp = Column(DateTime, default=get_utc_now)
+    timestamp = Column(DateTime, default=get_utc_now, index=True)
     metadata_json = Column(JSON, default=dict)
 
 

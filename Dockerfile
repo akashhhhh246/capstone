@@ -47,7 +47,17 @@ WORKDIR /app/backend
 # Initialize and seed database if necessary
 RUN python -c "import seed_db; seed_db.seed_database(force_reseed=False)"
 
+# Create non-root system user for CIS Docker benchmark enterprise security
+RUN groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -s /bin/bash -m appuser && \
+    chown -R appuser:appgroup /app
+
+USER appuser
+
 EXPOSE 9207
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-9207}/health || exit 1
 
 # Render will provide the PORT env var; start with uvicorn
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-9207}"]

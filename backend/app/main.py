@@ -1,12 +1,16 @@
 import os
 import sys
+import time
+import uuid
 import asyncio
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import logging
+from sqlalchemy.orm import Session
 
 # Ensure backend root in sys.path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +18,7 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.infrastructure.configuration.config import settings
-from app.infrastructure.database.session import init_db, SessionLocal
+from app.infrastructure.database.session import init_db, SessionLocal, get_db
 from app.domain.entities.models import Platform
 from app.presentation.api.v1.detection import router as detection_router
 from app.presentation.api.v1.content import router as content_router
@@ -112,6 +116,43 @@ Defensive Cybersecurity and Information Integrity Research Prototype:
     lifespan=lifespan
 )
 
+SERVER_START_TIME = datetime.now(timezone.utc)
+
+# Middleware: Request Correlation ID, Process Time & OWASP Security Headers
+@app.middleware("http")
+async def correlation_and_security_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    start_time = time.time()
+    
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        logger.error(f"Unhandled Exception [RequestID: {request_id}] on {request.method} {request.url.path}: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "type": "https://errors.aegis-defense.internal/server-error",
+                "title": "Internal Server Error",
+                "status": 500,
+                "detail": "An unexpected server error occurred during request processing.",
+                "request_id": request_id,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            },
+            headers={"X-Request-ID": request_id}
+        )
+    
+    process_time = round((time.time() - start_time) * 1000, 2)
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Process-Time"] = f"{process_time}ms"
+    
+    if getattr(settings, "SECURITY_HEADERS_ENABLED", True):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+    return response
+
 # CORS Middleware
 origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [str(settings.CORS_ORIGINS)]
 app.add_middleware(
@@ -158,9 +199,60 @@ async def websocket_live_endpoint(websocket: WebSocket):
         ws_manager.disconnect(websocket, simulation_id="global")
 
 @app.api_route("/health", methods=["GET", "HEAD"])
-async def health_check():
-    """Health check endpoint for Render, Docker, and Kubernetes probes."""
-    return JSONResponse(status_code=200, content={"status": "UP", "service": "aegis-defense-workbench", "version": "1.0.0"})
+@app.api_route(f"{settings.API_V1_STR}/health", methods=["GET", "HEAD"])
+async def enterprise_health_check(db: Session = Depends(get_db)):
+    """
+    Deep Enterprise Health & Telemetry Check.
+    Verifies database connectivity, ML model availability, entity counts, and process uptime.
+    """
+    from sqlalchemy import text
+    from app.domain.entities.models import Content, Campaign, SyntheticAccount
+    db_status = "HEALTHY"
+    db_latency_ms = 0.0
+    entity_counts = {}
+    
+    t0 = time.time()
+    try:
+        db.execute(text("SELECT 1"))
+        db_latency_ms = round((time.time() - t0) * 1000, 2)
+        entity_counts = {
+            "contents": db.query(Content).count(),
+            "campaigns": db.query(Campaign).count(),
+            "platforms": db.query(Platform).count(),
+            "accounts": db.query(SyntheticAccount).count()
+        }
+    except Exception as e:
+        db_status = f"DEGRADED: {str(e)}"
+        logger.error(f"Health check database failure: {e}")
+
+    model_artifacts = {
+        "tfidf_classifier": os.path.exists(settings.TFIDF_MODEL_PATH),
+        "gnn_model": os.path.exists(settings.GNN_MODEL_PATH),
+        "embedding_model": settings.EMBEDDING_MODEL
+    }
+    all_models_present = all([model_artifacts["tfidf_classifier"], model_artifacts["gnn_model"]])
+
+    uptime_sec = int((datetime.now(timezone.utc) - SERVER_START_TIME).total_seconds())
+    is_healthy = (db_status == "HEALTHY") and all_models_present
+    status_code = 200 if is_healthy else 503
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "UP" if is_healthy else "DEGRADED",
+            "service": settings.PROJECT_NAME,
+            "version": "1.0.0",
+            "environment": os.environ.get("ENVIRONMENT", "production"),
+            "uptime_seconds": uptime_sec,
+            "database": {
+                "status": db_status,
+                "latency_ms": db_latency_ms,
+                "records": entity_counts
+            },
+            "model_artifacts": model_artifacts,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    )
 
 # Serve built frontend dist assets if present
 candidate_dist_paths = [
