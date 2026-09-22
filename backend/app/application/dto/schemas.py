@@ -162,7 +162,7 @@ class SimulationResponse(BaseModel):
     campaign_id: str
     status: str
     event_rate_per_sec: float
-    total_events_emitted: int
+    total_events_emitted: Optional[int] = 0
     duration_seconds: int
     started_at: Optional[str] = None
     paused_at: Optional[str] = None

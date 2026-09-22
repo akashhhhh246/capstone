@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.infrastructure.database.session import get_db
@@ -21,7 +22,15 @@ async def start_simulation(request: SimulationStartRequest, db: Session = Depend
         db=db
     )
     return res
+@router.get("/active", response_model=Optional[SimulationResponse])
+def get_active_simulation(db: Session = Depends(get_db)):
+    """Get currently active or running propagation simulation, if any."""
+    return SimulationEngine.get_active_simulation(db)
 
+@router.post("/stop", response_model=Dict[str, Any])
+async def stop_all_simulations(db: Session = Depends(get_db)):
+    """Halt all currently running or paused simulation runs across the platform."""
+    return await SimulationEngine.stop_all_simulations(db)
 @router.post("/{id}/pause", response_model=SimulationResponse)
 async def pause_simulation(id: str, db: Session = Depends(get_db)):
     """Pause an active propagation simulation."""

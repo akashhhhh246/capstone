@@ -28,6 +28,9 @@ class SimulationEngine:
         duration_seconds: int = 120,
         db: Optional[Session] = None
     ) -> Dict[str, Any]:
+        # Halt any existing runaway simulation before starting a new one
+        await cls.stop_all_simulations(db)
+
         sim_id = str(uuid.uuid4())
         
         # Register in DB
@@ -42,6 +45,7 @@ class SimulationEngine:
                 campaign_id=campaign_id,
                 status="RUNNING",
                 event_rate_per_sec=event_rate,
+                total_events_emitted=0,
                 duration_seconds=duration_seconds,
                 started_at=datetime.now(timezone.utc)
             )
@@ -61,6 +65,7 @@ class SimulationEngine:
             "campaign_id": campaign_id,
             "status": "RUNNING",
             "event_rate_per_sec": event_rate,
+            "total_events_emitted": 0,
             "duration_seconds": duration_seconds,
             "started_at": datetime.now(timezone.utc).isoformat()
         }
@@ -84,6 +89,14 @@ class SimulationEngine:
             if own_db:
                 db.close()
 
+        await ws_manager.broadcast_event(
+            {
+                "type": "SIMULATION_PAUSED",
+                "simulation_id": simulation_id,
+                "status": "PAUSED"
+            },
+            simulation_id="global"
+        )
         return {"id": simulation_id, "status": "PAUSED"}
 
     @classmethod
@@ -91,7 +104,8 @@ class SimulationEngine:
         cls._running_states[simulation_id] = "STOPPED"
         if simulation_id in cls._active_tasks:
             task = cls._active_tasks.pop(simulation_id)
-            task.cancel()
+            if not task.done():
+                task.cancel()
 
         own_db = False
         if db is None:
@@ -108,7 +122,82 @@ class SimulationEngine:
             if own_db:
                 db.close()
 
+        # Broadcast stop event so all WebSocket clients immediately halt
+        await ws_manager.broadcast_event(
+            {
+                "type": "SIMULATION_STOPPED",
+                "simulation_id": simulation_id,
+                "status": "STOPPED"
+            },
+            simulation_id="global"
+        )
         return {"id": simulation_id, "status": "STOPPED"}
+
+    @classmethod
+    async def stop_all_simulations(cls, db: Optional[Session] = None) -> Dict[str, Any]:
+        """Cancel and halt all active or paused simulations across memory and database."""
+        stopped_count = 0
+        for sim_id, task in list(cls._active_tasks.items()):
+            cls._running_states[sim_id] = "STOPPED"
+            if not task.done():
+                task.cancel()
+            stopped_count += 1
+        cls._active_tasks.clear()
+
+        for sim_id in list(cls._running_states.keys()):
+            cls._running_states[sim_id] = "STOPPED"
+
+        own_db = False
+        if db is None:
+            db = SessionLocal()
+            own_db = True
+
+        try:
+            active_runs = db.query(SimulationRun).filter(SimulationRun.status.in_(["RUNNING", "PAUSED"])).all()
+            for r in active_runs:
+                r.status = "STOPPED"
+                r.stopped_at = datetime.now(timezone.utc)
+                stopped_count += 1
+            db.commit()
+        finally:
+            if own_db:
+                db.close()
+
+        # Broadcast stop event globally
+        await ws_manager.broadcast_event(
+            {
+                "type": "SIMULATION_STOPPED",
+                "simulation_id": "all",
+                "status": "STOPPED"
+            },
+            simulation_id="global"
+        )
+        return {"status": "STOPPED", "stopped_count": stopped_count}
+
+    @classmethod
+    def get_active_simulation(cls, db: Session) -> Optional[Dict[str, Any]]:
+        """Return the current active or running simulation if one exists."""
+        for sim_id, task in cls._active_tasks.items():
+            if not task.done() and cls._running_states.get(sim_id) in ["RUNNING", "PAUSED"]:
+                return cls.get_simulation_status(sim_id, db)
+
+        active_run = db.query(SimulationRun).filter(
+            SimulationRun.status.in_(["RUNNING", "PAUSED"])
+        ).order_by(SimulationRun.started_at.desc()).first()
+
+        if active_run:
+            return {
+                "id": active_run.id,
+                "campaign_id": active_run.campaign_id,
+                "status": cls._running_states.get(active_run.id, active_run.status),
+                "event_rate_per_sec": active_run.event_rate_per_sec,
+                "total_events_emitted": active_run.total_events_emitted,
+                "duration_seconds": active_run.duration_seconds,
+                "started_at": active_run.started_at.isoformat() if active_run.started_at else None,
+                "paused_at": active_run.paused_at.isoformat() if active_run.paused_at else None,
+                "stopped_at": active_run.stopped_at.isoformat() if active_run.stopped_at else None
+            }
+        return None
 
     @classmethod
     def get_simulation_status(cls, simulation_id: str, db: Session) -> Optional[Dict[str, Any]]:
@@ -159,13 +248,28 @@ class SimulationEngine:
             await asyncio.sleep(interval)
 
         cls._running_states[sim_id] = "COMPLETED"
+        if sim_id in cls._active_tasks:
+            cls._active_tasks.pop(sim_id, None)
+
+        db = SessionLocal()
+        try:
+            sim_run = db.query(SimulationRun).filter(SimulationRun.id == sim_id).first()
+            if sim_run and sim_run.status in ["RUNNING", "PAUSED"]:
+                sim_run.status = "COMPLETED"
+                sim_run.stopped_at = datetime.now(timezone.utc)
+                db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+
         await ws_manager.broadcast_event(
             {
                 "type": "SIMULATION_COMPLETED",
                 "simulation_id": sim_id,
                 "total_events": events_emitted
             },
-            simulation_id=sim_id
+            simulation_id="global"
         )
 
     @classmethod

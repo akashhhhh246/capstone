@@ -139,6 +139,16 @@ export const api = {
     return res.data;
   },
 
+  getActiveSimulation: async (): Promise<any> => {
+    const res = await apiClient.get('/simulation/active');
+    return res.data;
+  },
+
+  stopAllSimulations: async (): Promise<any> => {
+    const res = await apiClient.post('/simulation/stop');
+    return res.data;
+  },
+
   getSimulationStatus: async (simulationId: string): Promise<any> => {
     const res = await apiClient.get(`/simulation/${simulationId}`);
     return res.data;

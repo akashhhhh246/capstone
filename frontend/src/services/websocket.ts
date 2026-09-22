@@ -2,11 +2,13 @@ import { SimulationEventPayload } from '../types';
 
 type EventCallback = (event: SimulationEventPayload) => void;
 type StatusCallback = (connected: boolean) => void;
+type ControlCallback = (type: string, payload: any) => void;
 
 class WebSocketService {
   private socket: WebSocket | null = null;
   private listeners: Set<EventCallback> = new Set();
   private statusListeners: Set<StatusCallback> = new Set();
+  private controlListeners: Set<ControlCallback> = new Set();
   private isConnected = false;
   private simulationId = 'global';
   private reconnectTimer: any = null;
@@ -35,6 +37,8 @@ class WebSocketService {
           const message = JSON.parse(event.data);
           if (message.type === 'SIMULATION_PROPAGATION_EVENT' && message.data) {
             this.notifyListeners(message.data);
+          } else if (message.type) {
+            this.notifyControlListeners(message.type, message);
           }
         } catch (e) {
           console.warn('[WS] Non-JSON payload received:', event.data);
@@ -87,6 +91,23 @@ class WebSocketService {
     return () => {
       this.statusListeners.delete(callback);
     };
+  }
+
+  onControl(callback: ControlCallback) {
+    this.controlListeners.add(callback);
+    return () => {
+      this.controlListeners.delete(callback);
+    };
+  }
+
+  private notifyControlListeners(type: string, payload: any) {
+    this.controlListeners.forEach((cb) => {
+      try {
+        cb(type, payload);
+      } catch (err) {
+        console.error('[WS] Control listener error:', err);
+      }
+    });
   }
 
   private notifyListeners(data: SimulationEventPayload) {

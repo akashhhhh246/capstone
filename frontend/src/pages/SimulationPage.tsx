@@ -42,34 +42,65 @@ export const SimulationPage: React.FC = () => {
   const [currentVelocity, setCurrentVelocity] = useState<number>(0);
   const [currentReach, setCurrentReach] = useState<number>(0);
   const [currentRisk, setCurrentRisk] = useState<number>(0.75);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCampaigns = async () => {
+    const fetchCampaignsAndActiveSim = async () => {
       try {
-        const list = await api.listCampaigns();
+        const [list, active] = await Promise.all([
+          api.listCampaigns(),
+          api.getActiveSimulation().catch(() => null),
+        ]);
         setCampaigns(list);
-        if (list.length > 0) {
+
+        if (active && (active.status === 'RUNNING' || active.status === 'PAUSED')) {
+          setActiveSimId(active.id);
+          setSimStatus(active.status);
+          setSelectedCampaignId(active.campaign_id);
+          wsService.connect(active.id);
+        } else if (list.length > 0) {
           setSelectedCampaignId(list[0].id);
         }
       } catch (e) {
-        console.error('Failed to load campaigns:', e);
+        console.error('Failed to initialize simulation page:', e);
       }
     };
-    fetchCampaigns();
+    fetchCampaignsAndActiveSim();
 
     // Subscribe to WebSocket live events
-    const unsub = wsService.subscribe((event) => {
-      setLiveEvents((prev) => [event, ...prev]);
+    const unsubEvents = wsService.subscribe((event) => {
+      setLiveEvents((prev) => [event, ...prev.slice(0, 99)]);
       setCurrentVelocity(event.velocity);
       setCurrentReach(event.total_reach);
       setCurrentRisk(event.risk_score);
+
+      // Auto-detect running simulation if events are arriving
+      setSimStatus((prev) => (prev === 'PAUSED' ? 'PAUSED' : 'RUNNING'));
+      if (event.simulation_id) {
+        setActiveSimId((prev) => prev || event.simulation_id);
+      }
     });
 
-    return () => unsub();
+    // Subscribe to simulation lifecycle control signals
+    const unsubControl = wsService.onControl((type) => {
+      if (type === 'SIMULATION_STOPPED' || type === 'SIMULATION_COMPLETED') {
+        setSimStatus('STOPPED');
+        setActiveSimId(null);
+        setCurrentVelocity(0);
+      } else if (type === 'SIMULATION_PAUSED') {
+        setSimStatus('PAUSED');
+      }
+    });
+
+    return () => {
+      unsubEvents();
+      unsubControl();
+    };
   }, []);
 
   const handleStart = async () => {
     if (!selectedCampaignId) return;
+    setActionLoading(true);
     try {
       const res = await api.startSimulation(selectedCampaignId, eventRate, duration);
       setActiveSimId(res.id);
@@ -77,26 +108,43 @@ export const SimulationPage: React.FC = () => {
       wsService.connect(res.id);
     } catch (e) {
       console.error('Failed to start simulation:', e);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handlePause = async () => {
-    if (!activeSimId) return;
+    setActionLoading(true);
     try {
-      await api.pauseSimulation(activeSimId);
+      if (activeSimId) {
+        await api.pauseSimulation(activeSimId);
+      }
       setSimStatus('PAUSED');
     } catch (e) {
       console.error('Failed to pause simulation:', e);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleStop = async () => {
-    if (!activeSimId) return;
+    setActionLoading(true);
     try {
-      await api.stopSimulation(activeSimId);
-      setSimStatus('STOPPED');
+      if (activeSimId) {
+        await api.stopSimulation(activeSimId);
+      }
+      // Guarantee all active simulation loops are stopped on server
+      await api.stopAllSimulations();
     } catch (e) {
       console.error('Failed to stop simulation:', e);
+      try {
+        await api.stopAllSimulations();
+      } catch {}
+    } finally {
+      setSimStatus('STOPPED');
+      setActiveSimId(null);
+      setCurrentVelocity(0);
+      setActionLoading(false);
     }
   };
 
@@ -202,10 +250,16 @@ export const SimulationPage: React.FC = () => {
                 variant="outlined"
                 color="error"
                 startIcon={<Square size={16} />}
-                disabled={simStatus === 'STOPPED'}
+                disabled={actionLoading}
                 onClick={handleStop}
+                sx={{
+                  borderColor: '#EF4444',
+                  color: '#EF4444',
+                  fontWeight: 700,
+                  '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)', borderColor: '#DC2626' },
+                }}
               >
-                Stop
+                {actionLoading ? 'Halting...' : 'Stop Simulation'}
               </Button>
             </Box>
           </Grid>
@@ -267,7 +321,12 @@ export const SimulationPage: React.FC = () => {
           </Box>
           <Button
             size="small"
-            onClick={() => setLiveEvents([])}
+            onClick={() => {
+              setLiveEvents([]);
+              if (simStatus === 'STOPPED') {
+                setCurrentVelocity(0);
+              }
+            }}
             sx={{ color: '#9CA3AF' }}
           >
             Clear Log
