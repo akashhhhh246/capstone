@@ -1,4 +1,4 @@
-# Render Deployment Guide: Aegis Defense Platform
+# Render Deployment Guide: AIShield Platform
 
 This repository is pre-configured for seamless, unified 1-service deployment on [Render.com](https://render.com). The Python FastAPI backend automatically builds and serves the React frontend SPA, WebSocket feeds, and pre-trained ML models on a single URL.
 
@@ -14,7 +14,7 @@ Render Blueprints automatically configure the build commands, environment variab
 4. Select the branch: **`dynamic-and-threat-enhanced`**.
 5. Render will automatically detect [`render.yaml`](./render.yaml).
 6. Click **Apply**.
-7. Render will build the React bundle, install the Python ML stack, and launch your live application at `https://aegis-defense-workbench.onrender.com/`.
+7. Render will build the React bundle, install the Python ML stack, and launch your live application at `https://aishield-workbench.onrender.com/`.
 
 ---
 
@@ -25,7 +25,7 @@ If you prefer creating a Web Service manually via the Render UI:
 1. In Render Dashboard, click **New +** → **Web Service**.
 2. Select **Build and deploy from a Git repository** and connect your GitHub repo.
 3. Configure the settings:
-   - **Name**: `aegis-defense-workbench`
+   - **Name**: `aishield-workbench`
    - **Branch**: `dynamic-and-threat-enhanced`
    - **Language / Runtime**: `Python 3`
    - **Build Command**:
@@ -71,7 +71,7 @@ If you want 100% pre-packaged PyTorch/PyG Linux libraries:
 Once Render finishes deploying (Status: `Live`):
 
 1. **Visit your live URL**: `https://<your-app-name>.onrender.com/`
-   - You should see the **Aegis Defense Operations Dashboard**.
+   - You should see the **AIShield Operations Dashboard**.
 2. **Navigate to Threat Campaign Intelligence**: `https://<your-app-name>.onrender.com/campaigns`
    - Test the **"Scan Live Feed for Threats"** action to run live semantic clustering.
    - Test **"Export Threat Dossier (PDF)"** to download an executive intelligence report.

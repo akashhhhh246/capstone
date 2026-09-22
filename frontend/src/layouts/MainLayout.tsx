@@ -79,7 +79,7 @@ export const MainLayout: React.FC = () => {
         </Box>
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#F9FAFB', lineHeight: 1.1 }}>
-            AEGIS DEFENSE
+            AISHIELD
           </Typography>
           <Typography variant="caption" sx={{ color: '#60A5FA', fontWeight: 600, fontSize: '0.68rem', letterSpacing: '0.08em' }}>
             LLM INFOOPS PROTOCOL

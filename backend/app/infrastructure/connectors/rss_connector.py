@@ -38,7 +38,7 @@ class RSSConnector(DataSourceConnector):
         try:
             req = urllib.request.Request(
                 self.feed_urls[0],
-                headers={"User-Agent": "AegisDefenseResearchBot/1.0"}
+                headers={"User-Agent": "AIShieldResearchBot/1.0"}
             )
             with urllib.request.urlopen(req, timeout=5) as res:
                 return res.status == 200
@@ -65,7 +65,7 @@ class RSSConnector(DataSourceConnector):
             try:
                 req = urllib.request.Request(
                     feed_url,
-                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AegisDefenseResearchBot/1.0"}
+                    headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AIShieldResearchBot/1.0"}
                 )
                 with urllib.request.urlopen(req, timeout=8) as response:
                     if response.status != 200:

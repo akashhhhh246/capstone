@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: aegis-defense-workbench
+    name: aishield-workbench
     env: python
     region: oregon
     plan: free

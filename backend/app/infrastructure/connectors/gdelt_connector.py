@@ -45,7 +45,7 @@ class GDELTConnector(DataSourceConnector):
             url = f"{self.api_url}?{urllib.parse.urlencode(params)}"
             req = urllib.request.Request(
                 url,
-                headers={"User-Agent": "AegisDefense-InfoOpsResearch/1.0"}
+                headers={"User-Agent": "AIShield-InfoOpsResearch/1.0"}
             )
             with urllib.request.urlopen(req, timeout=5) as res:
                 return res.status == 200
@@ -90,7 +90,7 @@ class GDELTConnector(DataSourceConnector):
             req = urllib.request.Request(
                 request_url,
                 headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AegisDefenseResearchBot/1.0",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AIShieldResearchBot/1.0",
                     "Accept": "application/json"
                 }
             )

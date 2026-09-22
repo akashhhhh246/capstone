@@ -131,7 +131,7 @@ async def correlation_and_security_middleware(request: Request, call_next):
         return JSONResponse(
             status_code=500,
             content={
-                "type": "https://errors.aegis-defense.internal/server-error",
+                "type": "https://errors.aishield.internal/server-error",
                 "title": "Internal Server Error",
                 "status": 500,
                 "detail": "An unexpected server error occurred during request processing.",

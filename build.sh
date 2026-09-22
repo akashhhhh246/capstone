@@ -3,7 +3,7 @@
 set -o errexit
 
 echo "=========================================================="
-echo "  AEGIS DEFENSE PLATFORM - RENDER DEPLOYMENT BUILD SCRIPT "
+echo "  AISHIELD PLATFORM - RENDER DEPLOYMENT BUILD SCRIPT      "
 echo "=========================================================="
 
 echo "==> Step 1: Building Frontend React SPA Bundle..."
