@@ -1,60 +1,95 @@
-# 04. Quick Revision Cram Sheet (Read 5 Mins Before Review)
+# 04. Quick Revision Cram Sheet
 
-> **Keep this open on your phone or printed out while waiting outside the review hall.**
-
----
-
-## 1. The 10-Second Elevator Definition
-**AIShield** is an AI-powered defense workbench that detects AI-generated fake news, maps how it mutates across social media into a family tree (Provenance DAG), detects coordinated bot swarms using Graph Neural Networks, and provides a real-time WebSocket attack/defense flight simulator.
+> **Summary:** A clean, 5-minute pre-viva reference sheet. Keep this open to quickly review key definitions, metrics, and answers right before your project evaluation.
 
 ---
 
-## 2. Acronym Decoder Ring (Never Get Stumped by an Abbreviation!)
+## 1. Project Definition (The 10-Second Elevator Pitch)
 
-| Acronym | Stands For | What It Actually Means |
-| :--- | :--- | :--- |
-| **DAG** | Directed Acyclic Graph | A family tree with arrows going forward in time; no circular loops. |
-| **GNN** | Graph Neural Network | An AI model that looks at who is connected to whom in a social network. |
-| **GCN** | Graph Convolutional Network | The specific type of GNN layer we use in PyTorch to pass messages between neighbor nodes. |
-| **GLTR** | Giant Language Model Test Room | A technique (Harvard/MIT-IBM) testing whether words are predictable (green = AI, red = human). |
-| **TF-IDF** | Term Frequency - Inverse Document Frequency | A classic statistical formula scoring how unique and distinctive words are in a document. |
-| **GDELT** | Global Database of Events, Language, and Tone | A massive global database monitoring real news worldwide in 100+ languages. |
-| **RSS** | Really Simple Syndication | Standard web feed protocol used by news outlets like BBC and Reuters. |
-| **WAL** | Write-Ahead Logging | A database setting in SQLite that prevents "database is locked" errors during simultaneous read/write. |
-| **WS** | WebSocket | A live, two-way connection between server and browser for zero-delay event streaming. |
+> **AIShield** is an AI-powered defense platform that:
+> 1. **Detects** AI-generated disinformation text using linguistic predictability.
+> 2. **Traces** rumor mutations into a family tree (**Provenance DAG**).
+> 3. **Uncovers** coordinated bot swarms using **Graph Neural Networks (GNN)**.
+> 4. **Simulates** live attack cascades and fact-checking debunks over real-time **WebSockets**.
 
 ---
 
-## 3. Numbers & Parameters to Know by Heart
+## 2. Core Acronyms & Terms (Plain English)
 
-- **Embedding Model:** `sentence-transformers/all-MiniLM-L6-v2` (Produces **384-dimensional** semantic vectors).
-- **Provenance Link Threshold:** **0.75 (75%) Cosine Similarity** (If two posts are $\ge 75\%$ similar, they are linked in the DAG).
-- **Overall Model Accuracy:** **$\sim 92\%$ cross-validated accuracy** on benchmark synthetic detection datasets.
-- **Port Number:** Running locally on port **`9207`** (`http://localhost:9207`).
-- **Simulated Event Split in Threat Campaigns:**
-  - $60\%$ Adversarial Bot Leaks ($74\% - 98\%$ risk)
-  - $25\%$ Fact-Check Debunks ($5\% - 16\%$ risk, emerald green)
-  - $15\%$ Official Regulatory Notices ($10\% - 25\%$ risk, cyan)
-
----
-
-## 4. The 5 Golden Rules for Acing Your Review
-
-1. **Rule 1: Always speak in terms of "Layers of Defense".**
-   - If asked how you solve a problem, say: *"We don't rely on one method; we use a multi-layer defense: linguistic text detection, provenance lineage, and network topology."*
-2. **Rule 2: Never claim 100% accuracy.**
-   - If asked about accuracy: *"We achieve ~92% accuracy, and we intentionally designed the platform with Human-in-the-Loop decision support so human analysts have explainable evidence before making conclusions."*
-3. **Rule 3: If you don't know a theoretical answer, bridge back to your code.**
-   - Say: *"While I would need to check the exact mathematical equation for that specific variation, in our implementation in `propagation_service.py`, we handle it by..."* Examiners love seeing code familiarity!
-4. **Rule 4: Emphasize the Fact-Checking & Good News in Simulation.**
-   - Evaluators love balance: *"Our simulator doesn't just show scary attacks; it realistically models defense counter-measures like community notes, fact-checkers, and verified science broadcasts."*
-5. **Rule 5: Keep your screen clean and zoomed in.**
-   - Use `Ctrl + Plus` if projected on a wall or TV so professors in the back row can easily read the crisp typography and dark theme.
+### 🔹 Graph & Network Terms
+* **DAG (Directed Acyclic Graph):**
+  * *Meaning:* A family tree of posts where arrows only move forward in time. No backward loops are possible.
+* **GNN (Graph Neural Network):**
+  * *Meaning:* An AI model that analyzes relationships (who follows, mentions, or retweets whom) to spot bot rings.
+* **GCN (Graph Convolutional Network):**
+  * *Meaning:* The specific neural network layer in PyTorch that passes information between neighboring social accounts.
 
 ---
 
-## 5. Folder Index in `review tactics/`
-- [01_PROJECT_STORY_AND_CONCEPTS.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/01_PROJECT_STORY_AND_CONCEPTS.md) - The complete story, analogies, and concepts explained simply.
-- [02_HOW_TO_DEMO_AND_PRESENT.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/02_HOW_TO_DEMO_AND_PRESENT.md) - Exact step-by-step click guide and verbal script.
-- [03_VIVA_QUESTIONS_AND_PERFECT_ANSWERS.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/03_VIVA_QUESTIONS_AND_PERFECT_ANSWERS.md) - 25 probable viva questions with model answers.
-- [04_QUICK_REVISION_CRAM_SHEET.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/04_QUICK_REVISION_CRAM_SHEET.md) - This 5-minute pre-viva sheet.
+### 🔹 AI & Detection Terms
+* **GLTR (Giant Language Model Test Room):**
+  * *Meaning:* A tool from Harvard/MIT-IBM testing if words are too predictable. AI writes mostly green (top-10 likely) words; humans write with variety.
+* **Entropy:**
+  * *Meaning:* Word unpredictability. AI output has **low entropy** (safe, predictable words); human writing has **high entropy** (slang, metaphors).
+* **Burstiness:**
+  * *Meaning:* Sentence variation. Humans write short, punchy sentences mixed with long ones; AI generates uniform, medium-length sentences.
+* **TF-IDF:**
+  * *Meaning:* A statistical metric scoring how distinctive specific words are in AI vs human texts.
+
+---
+
+### 🔹 Data & Infrastructure Terms
+* **GDELT:**
+  * *Meaning:* Global Database of Events, Language, and Tone — monitors real-world news worldwide in over 100 languages.
+* **RSS:**
+  * *Meaning:* Live syndicated feeds from trusted news providers (e.g., BBC News, Reuters).
+* **SQLite WAL Mode:**
+  * *Meaning:* Write-Ahead Logging — allows background news ingestion while the frontend reads simultaneously with zero database locking.
+* **WebSocket (`ws://`):**
+  * *Meaning:* A persistent connection that pushes live simulation events instantly to the browser without polling.
+
+---
+
+## 3. Key Numbers & Metrics to Memorize
+
+* **Text Embedding Dimensions:**
+  * `384` dimensions (generated by `all-MiniLM-L6-v2`).
+* **Provenance Similarity Threshold:**
+  * `0.75` (75% cosine similarity connects two posts in the family tree).
+* **Model Classification Accuracy:**
+  * `~92%` cross-validated accuracy on synthetic detection benchmarks.
+* **Application Port:**
+  * `http://localhost:9207`
+* **Threat Campaign Simulation Mix (Operation GridPulse):**
+  * **60%** Adversarial Bot Amplification (74% – 98% risk)
+  * **25%** Live Fact-Check Debunks (5% – 16% risk, emerald green)
+  * **15%** Official Regulatory Notices (10% – 25% risk, cyan)
+* **Verified Science Simulation Mix (NASA JWST Outreach):**
+  * **85%** Verified Scientific Broadcasts (4% – 22% risk)
+  * **15%** Constructive Community Discussion (8% – 28% risk)
+
+---
+
+## 4. The 5 Golden Rules for Your Review
+
+1. **Speak in Layers:**
+   * Never say "we just check text." Always say: *"We use a multi-layer defense: linguistic detection, provenance lineage, and network topology."*
+
+2. **Never Claim 100% Accuracy:**
+   * Say: *"Our model achieves ~92% accuracy, and we design for Human-in-the-Loop decision support so analysts make the final verified call."*
+
+3. **Point to the Positive Counter-Measures in Simulation:**
+   * Highlight: *"Notice that our simulator doesn't just generate threats; it models active ecosystem defense with live fact-checking debunks and verified institutional notices."*
+
+4. **Bridge Unknown Theory Back to Your Code:**
+   * Say: *"While theoretical variants exist, in our implementation in `propagation_service.py`, we designed it to..."*
+
+5. **Screen Setup:**
+   * Press `F11` in your browser for full-screen view. Use `Ctrl + Plus` if presenting on an external projector.
+
+---
+
+## 5. Review Kit Navigation
+* [01_PROJECT_STORY_AND_CONCEPTS.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/01_PROJECT_STORY_AND_CONCEPTS.md) — Intuitive explanations & the Detective Metaphor
+* [02_HOW_TO_DEMO_AND_PRESENT.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/02_HOW_TO_DEMO_AND_PRESENT.md) — Step-by-step click script for the live demo
+* [03_VIVA_QUESTIONS_AND_PERFECT_ANSWERS.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/03_VIVA_QUESTIONS_AND_PERFECT_ANSWERS.md) — 25 model viva questions & answers
