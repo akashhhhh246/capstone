@@ -18,7 +18,10 @@ class SimulationEngine:
     _active_tasks: Dict[str, asyncio.Task] = {}
     _running_states: Dict[str, str] = {}  # RUNNING, PAUSED, STOPPED
 
-    EVENT_TYPES = ["POST", "RESHARE", "REPLY", "QUOTE", "CROSS_PLATFORM_SHARE", "CONTENT_VARIANT"]
+    EVENT_TYPES = [
+        "POST", "RESHARE", "REPLY", "QUOTE", "CROSS_PLATFORM_SHARE", "CONTENT_VARIANT",
+        "FACT_CHECK_DEBUNK", "COMMUNITY_NOTE", "OFFICIAL_NOTICE"
+    ]
 
     @classmethod
     async def start_simulation(
@@ -288,32 +291,149 @@ class SimulationEngine:
             else:
                 chosen_plat = ("plat-live-01", "SimuTwitter")
 
-            if db_accounts:
-                acc_obj = random.choice(db_accounts)
-                chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
-            else:
-                chosen_acc = ("acc-synth-01", "@node_relay", 0.85)
-
-            event_type = random.choice(cls.EVENT_TYPES)
             now_str = datetime.now(timezone.utc).isoformat()
-
-            # Dynamic kinetic calculation
             base_velocity = camp.velocity_events_per_hour if camp else 12.0
             sim_velocity = round(base_velocity + random.uniform(-1.5, 3.5), 2)
             base_reach = camp.total_reach if camp else 5000
             total_reach = int(base_reach + (event_seq * random.randint(50, 180)))
-            base_risk = camp.risk_score if camp else 0.75
-            risk_score = round(min(0.99, max(0.20, base_risk + random.uniform(-0.05, 0.05))), 2)
 
-            if db_posts:
-                chosen_post = random.choice(db_posts)
-                src_post_id = chosen_post.id
-                content_id = chosen_post.content_id
-                snippet = chosen_post.content.raw_text[:120] if chosen_post.content else "Emergent propagation signal active across nodes..."
+            # Distinguish threat campaigns from benign/science/low-risk initiatives
+            camp_base_risk = camp.risk_score if camp else 0.75
+            is_threat_campaign = (camp_base_risk >= 0.50)
+
+            bot_accounts = [a for a in db_accounts if a.is_coordinated_actor or a.bot_probability > 0.5]
+            credible_accounts = [a for a in db_accounts if not a.is_coordinated_actor and a.bot_probability <= 0.5]
+            
+            # Virtual verified handles if DB accounts are all bot seeds
+            virtual_credible = [
+                ("acc-factcheck-01", "@official_factcheck_desk", 0.02),
+                ("acc-reuters-01", "@reuters_verify", 0.02),
+                ("acc-comm-01", "@community_notes_live", 0.03),
+                ("acc-science-01", "@verified_science_daily", 0.04),
+                ("acc-academic-01", "@u_academic_observer", 0.06),
+                ("acc-safety-01", "@national_safety_wire", 0.03)
+            ]
+
+            if is_threat_campaign:
+                # In a threat cascade:
+                # 60% = Adversarial dissemination (bots, high risk)
+                # 25% = Live Fact-Check & Counter-Disinformation Debunks (verified, low risk!)
+                # 15% = Institutional Official Clarification & Community context (low risk!)
+                roll = random.random()
+                if roll < 0.60:
+                    event_category = "ADVERSARIAL"
+                elif roll < 0.85:
+                    event_category = "FACT_CHECK"
+                else:
+                    event_category = "OFFICIAL_NOTICE"
             else:
-                src_post_id = f"post-sim-{random.randint(100, 199)}"
-                content_id = f"content-sim-{random.randint(1, 10)}"
-                snippet = camp.target_narrative if camp else "Emergent narrative dissemination detected across live cluster..."
+                # In a legitimate / scientific / low-risk campaign:
+                # 85% = Verified discovery / legitimate broadcast (low risk: 4% - 18%)
+                # 15% = Public discussion & inquiries (low risk: 10% - 25%)
+                roll = random.random()
+                if roll < 0.85:
+                    event_category = "BENIGN_BROADCAST"
+                else:
+                    event_category = "ORGANIC_INQUIRY"
+
+            if event_category == "ADVERSARIAL":
+                if bot_accounts:
+                    acc_obj = random.choice(bot_accounts)
+                    chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+                else:
+                    chosen_acc = ("acc-synth-01", "@pulse_mesh_node", 0.91)
+
+                event_type = random.choice(["POST", "RESHARE", "CROSS_PLATFORM_SHARE", "CONTENT_VARIANT"])
+                risk_score = round(min(0.98, max(0.74, camp_base_risk + random.uniform(-0.05, 0.06))), 2)
+
+                if db_posts:
+                    chosen_post = random.choice(db_posts)
+                    src_post_id = chosen_post.id
+                    content_id = chosen_post.content_id
+                    snippet = chosen_post.content.raw_text[:120] if chosen_post.content else (camp.target_narrative[:120] if camp else "Emergent disinformation signal circulating across nodes...")
+                else:
+                    src_post_id = f"post-sim-{random.randint(100, 199)}"
+                    content_id = f"content-sim-{random.randint(1, 10)}"
+                    snippet = camp.target_narrative if camp else "Emergent disinformation signal circulating across nodes..."
+
+            elif event_category == "FACT_CHECK":
+                if credible_accounts:
+                    acc_obj = random.choice(credible_accounts)
+                    chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+                else:
+                    chosen_acc = random.choice(virtual_credible)
+
+                event_type = "FACT_CHECK_DEBUNK"
+                risk_score = round(random.uniform(0.05, 0.16), 2)  # Low risk: 5% - 16%!
+                src_post_id = f"post-fc-{random.randint(200, 299)}"
+                content_id = f"content-fc-{random.randint(1, 10)}"
+
+                camp_name_lower = (camp.name.lower() if camp else "") + " " + (camp.target_narrative.lower() if camp else "")
+                if "grid" in camp_name_lower or "power" in camp_name_lower or "electric" in camp_name_lower:
+                    debunk_templates = [
+                        "FACT-CHECK DEBUNK: National electrical grid operators and telemetry confirm 100% stable frequency (60.0 Hz). Rumors of sabotage rated FALSE.",
+                        "COMMUNITY NOTE: Independent energy watchdogs confirm zero cyber disruptions. Viral whistleblower claims originate from inauthentic bot cluster.",
+                        "VERIFIED NOTICE: Energy Regulatory Commission statement: 'All national switching and substation nodes operating nominally with zero interference.'"
+                    ]
+                elif "water" in camp_name_lower:
+                    debunk_templates = [
+                        "FACT-CHECK DEBUNK: Municipal public health department tests confirm drinking water fully adheres to EPA purity guidelines. Contamination rumors false.",
+                        "COMMUNITY NOTE: Independent laboratory assays show 0.0% abnormal chemical traces across all metropolitan reservoirs.",
+                        "OFFICIAL CLARIFICATION: Defense ministry confirms leaked documents cited in viral posts are fabricated digital forgeries."
+                    ]
+                else:
+                    debunk_templates = [
+                        f"FACT-CHECK DEBUNK: Independent investigative analysts confirm viral narrative concerning '{camp.name if camp else 'threat'}' is unverified synthetic rumor.",
+                        "COMMUNITY NOTE: Credible primary sources confirm operational normalcy; no verified evidence supports viral alarmist claims.",
+                        "VERIFIED ALERT: Platform Trust & Safety team has flagged this propagation cluster for coordinated inauthentic amplification."
+                    ]
+                snippet = random.choice(debunk_templates)
+
+            elif event_category == "OFFICIAL_NOTICE":
+                if credible_accounts:
+                    acc_obj = random.choice(credible_accounts)
+                    chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+                else:
+                    chosen_acc = random.choice(virtual_credible)
+
+                event_type = "OFFICIAL_NOTICE"
+                risk_score = round(random.uniform(0.10, 0.25), 2)  # Low risk: 10% - 25%!
+                src_post_id = f"post-off-{random.randint(300, 399)}"
+                content_id = f"content-off-{random.randint(1, 10)}"
+                snippet = "OFFICIAL ADVISORY: State emergency oversight committee confirms all public infrastructure operations proceeding normally. Citizen hotlines clear."
+
+            elif event_category == "BENIGN_BROADCAST":
+                if credible_accounts:
+                    acc_obj = random.choice(credible_accounts)
+                    chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+                else:
+                    chosen_acc = random.choice(virtual_credible)
+
+                event_type = random.choice(["POST", "RESHARE", "QUOTE"])
+                risk_score = round(min(0.22, max(0.04, camp_base_risk + random.uniform(-0.04, 0.04))), 2)  # Low risk: 4% - 22%!
+
+                if db_posts:
+                    chosen_post = random.choice(db_posts)
+                    src_post_id = chosen_post.id
+                    content_id = chosen_post.content_id
+                    snippet = chosen_post.content.raw_text[:120] if chosen_post.content else (camp.target_narrative[:120] if camp else "Verified public outreach broadcast nominal...")
+                else:
+                    src_post_id = f"post-sci-{random.randint(400, 499)}"
+                    content_id = f"content-sci-{random.randint(1, 10)}"
+                    snippet = camp.target_narrative if camp else "Verified public research broadcast nominal..."
+
+            else:  # ORGANIC_INQUIRY
+                if credible_accounts:
+                    acc_obj = random.choice(credible_accounts)
+                    chosen_acc = (acc_obj.id, acc_obj.pseudonym_handle, acc_obj.bot_probability)
+                else:
+                    chosen_acc = random.choice(virtual_credible)
+
+                event_type = random.choice(["REPLY", "QUOTE"])
+                risk_score = round(random.uniform(0.08, 0.28), 2)
+                src_post_id = f"post-org-{random.randint(500, 599)}"
+                content_id = f"content-org-{random.randint(1, 10)}"
+                snippet = "Community Discussion: 'Fascinating progress highlighted in the latest peer-reviewed report. Great to see transparent verification standards.'"
 
             return {
                 "event_id": str(uuid.uuid4()),

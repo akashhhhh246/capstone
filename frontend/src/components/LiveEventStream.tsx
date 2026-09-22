@@ -30,6 +30,12 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({ events, maxIte
         return '#F59E0B';
       case 'CONTENT_VARIANT':
         return '#EF4444';
+      case 'FACT_CHECK_DEBUNK':
+        return '#10B981';
+      case 'OFFICIAL_NOTICE':
+        return '#06B6D4';
+      case 'COMMUNITY_NOTE':
+        return '#A855F7';
       default:
         return '#9CA3AF';
     }
@@ -112,8 +118,18 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({ events, maxIte
                 <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
                   Audience Reach: <strong>{ev.total_reach.toLocaleString()}</strong>
                 </Typography>
-                <Typography variant="caption" sx={{ color: ev.risk_score > 0.7 ? '#F87171' : '#34D399' }}>
-                  Risk: <strong>{(ev.risk_score * 100).toFixed(0)}%</strong>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: ev.risk_score > 0.7 ? '#F87171' : ev.risk_score > 0.35 ? '#FBBF24' : '#34D399',
+                    fontWeight: 700,
+                  }}
+                >
+                  Risk:{' '}
+                  <strong>
+                    {(ev.risk_score * 100).toFixed(0)}%{' '}
+                    {ev.risk_score <= 0.35 ? '(VERIFIED / LOW)' : ev.risk_score > 0.7 ? '(THREAT CASCADE)' : '(MONITORED)'}
+                  </strong>
                 </Typography>
               </Box>
             </Box>

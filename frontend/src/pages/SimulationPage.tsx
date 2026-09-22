@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Grid,
@@ -43,6 +43,17 @@ export const SimulationPage: React.FC = () => {
   const [currentReach, setCurrentReach] = useState<number>(0);
   const [currentRisk, setCurrentRisk] = useState<number>(0.75);
   const [actionLoading, setActionLoading] = useState(false);
+  const [scenarioCategory, setScenarioCategory] = useState<'ALL' | 'THREATS' | 'BENIGN'>('ALL');
+
+  const filteredCampaigns = useMemo(() => {
+    if (scenarioCategory === 'THREATS') {
+      return campaigns.filter((c) => c.risk_score >= 0.5);
+    }
+    if (scenarioCategory === 'BENIGN') {
+      return campaigns.filter((c) => c.risk_score < 0.5);
+    }
+    return campaigns;
+  }, [campaigns, scenarioCategory]);
 
   useEffect(() => {
     const fetchCampaignsAndActiveSim = async () => {
@@ -177,9 +188,59 @@ export const SimulationPage: React.FC = () => {
 
       {/* Control Console */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 2 }}>
-          Simulation Parameters & Mission Deck
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F9FAFB' }}>
+            Simulation Parameters & Mission Deck
+          </Typography>
+
+          {/* Scenario Category Quick Filter */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label="All Scenarios"
+              size="small"
+              onClick={() => setScenarioCategory('ALL')}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 700,
+                bgcolor: scenarioCategory === 'ALL' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: scenarioCategory === 'ALL' ? '#60A5FA' : '#9CA3AF',
+                border: `1px solid ${scenarioCategory === 'ALL' ? '#3B82F6' : 'rgba(255, 255, 255, 0.1)'}`,
+              }}
+            />
+            <Chip
+              label="🚨 Disinfo Threats"
+              size="small"
+              onClick={() => {
+                setScenarioCategory('THREATS');
+                const firstThreat = campaigns.find((c) => c.risk_score >= 0.5);
+                if (firstThreat) setSelectedCampaignId(firstThreat.id);
+              }}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 700,
+                bgcolor: scenarioCategory === 'THREATS' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: scenarioCategory === 'THREATS' ? '#F87171' : '#9CA3AF',
+                border: `1px solid ${scenarioCategory === 'THREATS' ? '#EF4444' : 'rgba(255, 255, 255, 0.1)'}`,
+              }}
+            />
+            <Chip
+              label="🛡️ Verified Science / Good News"
+              size="small"
+              onClick={() => {
+                setScenarioCategory('BENIGN');
+                const firstBenign = campaigns.find((c) => c.risk_score < 0.5);
+                if (firstBenign) setSelectedCampaignId(firstBenign.id);
+              }}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 700,
+                bgcolor: scenarioCategory === 'BENIGN' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                color: scenarioCategory === 'BENIGN' ? '#34D399' : '#9CA3AF',
+                border: `1px solid ${scenarioCategory === 'BENIGN' ? '#10B981' : 'rgba(255, 255, 255, 0.1)'}`,
+              }}
+            />
+          </Box>
+        </Box>
 
         <Grid container spacing={3} alignItems="center">
           {/* Target Campaign Selector */}
@@ -197,11 +258,32 @@ export const SimulationPage: React.FC = () => {
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.1)' },
                 }}
               >
-                {campaigns.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.name}
-                  </MenuItem>
-                ))}
+                {filteredCampaigns.map((c) => {
+                  const isThreat = c.risk_score >= 0.5;
+                  return (
+                    <MenuItem
+                      key={c.id}
+                      value={c.id}
+                      sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {isThreat ? '🚨' : '🛡️'} {c.name}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={isThreat ? `Threat ${(c.risk_score * 100).toFixed(0)}%` : `Verified ${(c.risk_score * 100).toFixed(0)}%`}
+                        sx={{
+                          fontSize: '0.65rem',
+                          height: 18,
+                          fontWeight: 700,
+                          bgcolor: isThreat ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                          color: isThreat ? '#F87171' : '#34D399',
+                          border: `1px solid ${isThreat ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                        }}
+                      />
+                    </MenuItem>
+                  );
+                })}
               </Select>
             </FormControl>
           </Grid>
@@ -299,9 +381,9 @@ export const SimulationPage: React.FC = () => {
           <MetricCard
             title="Real-Time Threat Score"
             value={`${(currentRisk * 100).toFixed(0)}%`}
-            subtitle="Live Composite Risk"
+            subtitle={currentRisk <= 0.35 ? 'Verified / Low Threat' : currentRisk <= 0.70 ? 'Moderate Signal' : 'High Threat Cascade'}
             icon={<Layers size={22} />}
-            color={currentRisk > 0.7 ? '#EF4444' : '#F59E0B'}
+            color={currentRisk <= 0.35 ? '#10B981' : currentRisk <= 0.70 ? '#F59E0B' : '#EF4444'}
           />
         </Grid>
       </Grid>
