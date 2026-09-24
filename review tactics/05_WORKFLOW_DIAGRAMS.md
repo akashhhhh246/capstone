@@ -1,102 +1,77 @@
 # 05. System Workflow & Architecture Diagrams (Mermaid)
 
-> **Summary:** Clean, horizontal (widescreen-friendly) Mermaid workflow diagrams for **AIShield**. These are optimized for 16:9 presentation slides and Mermaid Live Editor so they fit on a single screen without vertical scrolling.
+> **Summary:** This file contains visual Mermaid workflow diagrams for **AIShield**, specifically optimized with a **Square-Like (2x2 Balanced Grid)** layout so that it fills **Canva / PowerPoint presentation slides** with large, clear, easily readable text.
 
 ---
 
-## 1. Widescreen End-to-End System Workflow (`flowchart LR`)
+## 1. Square-Like Presentation Workflow (2x2 Grid — Best for Slides & Canva)
 
-*Optimized horizontally for laptops, projectors, and slides (No vertical scrolling needed).*
+*Optimized aspect ratio (~1.25 : 1) to fill presentation slides completely without wide empty margins or tiny text.*
 
 ```mermaid
-flowchart LR
-    %% ================= 1. INGESTION =================
-    subgraph S1["1. Live Ingestion Feeds"]
-        direction TB
-        GDELT["GDELT Global News Feed<br/>(100+ Languages)"]
-        RSS["BBC & Reuters RSS Feeds"]
-        BSKY["Bluesky AT-Protocol"]
-        SIM["WebSocket Simulator<br/>(Attacks + Debunks)"]
+flowchart TD
+    subgraph ROW_TOP[" "]
+        direction LR
+        BOX1["<b>1. DATA INGESTION & GATEWAY</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Live External Data Feeds:</b><br/>• GDELT Global News Stream (100+ Languages)<br/>• Trusted News RSS Feeds (BBC News, Reuters)<br/>• Bluesky Social Stream (AT-Protocol Firehose)<br/>• Multi-Platform Simulator (Attacks & Debunks)<br/><br/><b>Ingestion Processing:</b><br/>• FastAPI Asynchronous Ingestion Router<br/>• SHA-256 Deduplication & Content Registry<br/>• Text Normalizer & Linguistic Tokenizer"]
+
+        BOX2["<b>2. TRIPLE-LAYER AI DEFENSE ENGINE</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Layer 1: AI Content Detection</b><br/>• TF-IDF Stylistics + ML Classifier<br/>• GLTR Linguistic Entropy & Burstiness<br/>• Statistical Watermark / Steganography Detector<br/><br/><b>Layer 2: Content Provenance Lineage</b><br/>• SentenceTransformers (all-MiniLM-L6-v2)<br/>• Parent-Child Mutation DAG (Cosine >= 0.75)<br/><br/><b>Layer 3: Network & Bot Forensics</b><br/>• Multi-Platform Social Interaction Graph<br/>• PyTorch GNN (2-Layer Graph Convolutional Net)"]
+
+        BOX1 -->|Preprocessed Text Stream| BOX2
     end
 
-    %% ================= 2. GATEWAY =================
-    subgraph S2["2. Processing Gateway"]
-        direction TB
-        API["FastAPI Ingestion Gateway"]
-        DEDUP["SHA-256 Deduplication"]
-        CLEAN["Text Normalizer & Tokenizer"]
-        API --> DEDUP --> CLEAN
+    subgraph ROW_BTM[" "]
+        direction LR
+        BOX3["<b>3. RISK SYNTHESIS & DATABASE</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Composite Threat Scoring:</b><br/>• Explainable Multi-Signal Risk Fusion<br/>• Calibrated 0% - 100% Composite Risk Metric<br/>• Explainable Reasoning & Forensic Audit Trail<br/><br/><b>High-Concurrency Storage:</b><br/>• SQLite Database configured in WAL Mode<br/>• Non-blocking Simultaneous Read & Write<br/>• Entity Schema: Posts, Accounts, Campaigns"]
+
+        BOX4["<b>4. ANALYST OPERATIONS WORKBENCH</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Real-Time Telemetry:</b><br/>• Persistent WebSocket Gateway (ws://)<br/>• Low-Latency Event Push (Attacks & Debunks)<br/><br/><b>Interactive React 18 UI Console:</b><br/>• Draggable React Flow Provenance DAG Canvas<br/>• Multi-Platform Diffusion Swimlanes<br/>• Live Telemetry Log & Incident Management"]
+
+        BOX3 -->|Committed Records & Metrics| BOX4
     end
 
-    %% ================= 3. DEFENSE PIPELINE =================
-    subgraph S3["3. Multi-Layer Defense Pipeline"]
-        direction TB
-        subgraph L1["Layer 1: AI Content Detection"]
-            direction TB
-            DET["TF-IDF + GLTR Entropy + Watermarks"]
-            SCORE1["AI Probability Score (0 - 100%)"]
-            DET --> SCORE1
-        end
+    BOX2 -->|Linguistic + DAG + GNN Signals| BOX3
+    BOX1 -.->|Live Simulation Event Push| BOX4
 
-        subgraph L2["Layer 2: Provenance Lineage"]
-            direction TB
-            EMB["SentenceTransformers MiniLM-L6-v2"]
-            DAG["Parent-Child DAG (Cosine >= 0.75)"]
-            EMB --> DAG
-        end
+    style ROW_TOP fill:none,stroke:none
+    style ROW_BTM fill:none,stroke:none
 
-        subgraph L3["Layer 3: Network & Bot Forensics"]
-            direction TB
-            GNN["PyTorch Graph Neural Network (GCN)"]
-            BOTS["Topological Bot Cluster Score"]
-            GNN --> BOTS
-        end
-    end
-
-    %% ================= 4. RISK & DB =================
-    subgraph S4["4. Risk Engine & DB"]
-        direction TB
-        RISK["Composite Threat Engine<br/>(Explainable Risk Fusion)"]
-        DB[("SQLite WAL Database<br/>(Write-Ahead Logging)")]
-        RISK --> DB
-    end
-
-    %% ================= 5. OPERATIONS CONSOLE =================
-    subgraph S5["5. Analyst Operations Console"]
-        direction TB
-        WS["Live WebSocket Telemetry"]
-        UI["React 18 Dark UI Dashboard"]
-        FLOW["React Flow Draggable DAG Canvas"]
-        LOG["Live Telemetry Log<br/>(Attacks + Debunks)"]
-        WS --> UI
-        UI --> FLOW
-        UI --> LOG
-    end
-
-    %% Inter-stage connections
-    S1 --> API
-    CLEAN --> L1
-    CLEAN --> L2
-    CLEAN --> L3
-    SCORE1 --> RISK
-    DAG --> RISK
-    BOTS --> RISK
-    RISK --> WS
-    DB -.-> UI
+    style BOX1 fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#F8FAFC
+    style BOX2 fill:#0F172A,stroke:#818CF8,stroke-width:2px,color:#F8FAFC
+    style BOX3 fill:#0F172A,stroke:#F59E0B,stroke-width:2px,color:#F8FAFC
+    style BOX4 fill:#0F172A,stroke:#10B981,stroke-width:2px,color:#F8FAFC
 ```
 
 ---
 
-## 2. Ultra-Compact Executive Architecture (Single-Line Slide View)
+## 2. Minimalist Square 4-Quadrant Architecture (Extra Big Font)
 
-*Use this simplified 5-stage block diagram if you only have 30 seconds on a single slide.*
+*If you want even larger text with zero clutter on your slide:*
 
 ```mermaid
-flowchart LR
-    A["📡 Ingestion Feeds<br/>(GDELT, RSS, Bluesky, Simulator)"] --> B["⚙️ Ingestion Gateway<br/>(FastAPI, SHA-256 Dedup, Tokenizer)"]
-    B --> C["🛡️ 3-Layer Forensics<br/>1. TF-IDF + GLTR Entropy<br/>2. SentenceTransformer DAG<br/>3. PyTorch GNN Bot Detector"]
-    C --> D["⚖️ Risk Synthesis & DB<br/>(Explainable Threat Fusion + SQLite WAL)"]
-    D --> E["🖥️ Analyst Workbench<br/>(React 18 + WebSockets + React Flow)"]
+flowchart TD
+    subgraph TOP_ROW[" "]
+        direction LR
+        Q1["<b>1. INGESTION & GATEWAY</b><br/>• GDELT News + BBC/Reuters RSS Feeds<br/>• Bluesky Firehose + WebSocket Simulator<br/>• FastAPI Router & SHA-256 Deduplication<br/>• Text Normalization & Tokenization"]
+        Q2["<b>2. AI DEFENSE & FORENSICS</b><br/>• Layer 1: TF-IDF + GLTR Entropy (0-100%)<br/>• Layer 2: SentenceTransformer Provenance DAG<br/>• Layer 3: PyTorch GNN Bot Cluster Detector<br/>• Cross-Platform Campaign Aggregation"]
+        Q1 ==> Q2
+    end
+
+    subgraph BTM_ROW[" "]
+        direction LR
+        Q3["<b>3. RISK ENGINE & DATABASE</b><br/>• Explainable Multi-Signal Risk Fusion<br/>• Calibrated 0 - 100% Threat Score<br/>• SQLite WAL Mode (Zero-Locking Storage)<br/>• High-Throughput Concurrent Persistence"]
+        Q4["<b>4. ANALYST WORKBENCH</b><br/>• React 18 Operations Center Dashboard<br/>• Draggable React Flow Provenance Canvas<br/>• Multi-Platform Network Swimlanes<br/>• Real-Time WebSockets (ws://) Live Stream"]
+        Q3 ==> Q4
+    end
+
+    Q2 ==> Q3
+    Q1 -.->|Live Feed| Q4
+
+    style TOP_ROW fill:none,stroke:none
+    style BTM_ROW fill:none,stroke:none
+
+    style Q1 fill:#0B132B,stroke:#00B4D8,stroke-width:3px,color:#FFFFFF
+    style Q2 fill:#0B132B,stroke:#7209B7,stroke-width:3px,color:#FFFFFF
+    style Q3 fill:#0B132B,stroke:#F77F00,stroke-width:3px,color:#FFFFFF
+    style Q4 fill:#0B132B,stroke:#06D6A0,stroke-width:3px,color:#FFFFFF
 ```
 
 ---
@@ -139,59 +114,13 @@ sequenceDiagram
 
 ---
 
-## 4. Simulation Ecosystem State Diagram
+## 4. How to Explain the 2x2 Diagram on Slide 10
 
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Simulator Standby
+When you are on **Slide 10 (Workflow)** in your Canva presentation, point to the 4 quadrants and say:
 
-    state "Scenario Selection" as Select {
-        DisinfoThreat: "🚨 Disinfo Threat (Operation GridPulse)"
-        VerifiedScience: "🛡️ Verified Science (NASA JWST Outreach)"
-    }
-
-    Idle --> Select: Analyst Chooses Scenario
-
-    state "Live Simulation Stream (WebSockets)" as SimStream {
-        state DisinfoThreat {
-            direction TB
-            BotLeak: "60% Adversarial Bot Propagation (Risk: 74% - 98%)"
-            FactCheck: "25% Fact-Check Debunks (Risk: 5% - 16%, Emerald Green)"
-            OfficialNotice: "15% Institutional Notices (Risk: 10% - 25%, Cyan)"
-        }
-
-        state VerifiedScience {
-            direction TB
-            SciencePost: "85% Verified Scientific Outreach (Risk: 4% - 22%)"
-            PublicDiscussion: "15% Organic Citizen Inquiries (Risk: 8% - 28%)"
-        }
-    }
-
-    Select --> SimStream: Start Simulation
-
-    state "Workbench Metrics Update" as Metrics {
-        ExposureGauge: Update Dynamic Reach
-        ThreatScore: Update Composite Score (Green <=35%, Amber <=70%, Red >70%)
-        EventStream: Render Live Telemetry Chips
-    }
-
-    SimStream --> Metrics: Stream Telemetry Events
-    Metrics --> Idle: Stop Simulation
-```
-
----
-
-## 5. How to Explain This in Your Viva
-
-When the evaluators ask: *"Explain the architecture / workflow of your project"*, point to the diagram in Section 1:
-
-> *"Our architecture flows from left to right in five clear stages:
+> *"Our system workflow is organized into four balanced quadrants:
 > 
-> 1. **Ingestion (Left):** We pull real news continuously from GDELT, RSS (BBC/Reuters), and Bluesky, or generate live scenarios in our simulation engine.
-> 2. **Gateway:** FastAPI deduplicates content using SHA-256 hashes and normalizes text for analysis.
-> 3. **Triple-Layer Forensics (Center):**
->    - *Layer 1 (Linguistic):* Evaluates word predictability with TF-IDF, GLTR entropy, and watermark detection.
->    - *Layer 2 (Provenance):* SentenceTransformers map semantic mutations into a Directed Acyclic Graph (DAG).
->    - *Layer 3 (Network):* A PyTorch Graph Neural Network (GNN) inspects social graph topology to uncover bot rings.
-> 4. **Risk & Storage:** All three layers fuse into an explainable composite threat score stored in SQLite WAL mode.
-> 5. **Analyst Console (Right):** Telemetry streams live over WebSockets into our React Flow dashboard for human analysts."*
+> 1. **Top-Left (Ingestion & Gateway):** We ingest live news from GDELT, RSS feeds, and Bluesky, normalizing and deduplicating data via FastAPI.
+> 2. **Top-Right (Triple-Layer AI Defense):** We analyze content across three dimensions: linguistic predictability (TF-IDF + GLTR), mutation ancestry (SentenceTransformer DAG), and bot swarm coordination (PyTorch GNN).
+> 3. **Bottom-Left (Risk & Database):** We synthesize all signals into an explainable composite threat score stored in SQLite with Write-Ahead Logging for high concurrency.
+> 4. **Bottom-Right (Analyst Operations Workbench):** The intelligence is pushed live over WebSockets to our React 18 dashboard, giving human analysts interactive DAG canvases and diffusion swimlanes."*
