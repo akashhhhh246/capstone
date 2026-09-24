@@ -29,6 +29,9 @@ Welcome to your project review preparation folder! Everything you need to ace yo
 4. **[04_QUICK_REVISION_CRAM_SHEET.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/04_QUICK_REVISION_CRAM_SHEET.md)**
    - *5-minute pre-viva sheet!* Key definitions, acronym decoder, critical numbers to memorize, and the 5 golden rules of project reviews.
 
+5. **[05_WORKFLOW_DIAGRAMS.md](file:///c:/Users/Akash/Desktop/capstone%20phase%202/review%20tactics/05_WORKFLOW_DIAGRAMS.md)**
+   - *Visual diagrams!* Beautiful, clear Mermaid diagrams of the complete system workflow, request lifecycle sequence, and simulation dynamics.
+
 ---
 
 ### Quick Tip Before You Enter the Review Room:
