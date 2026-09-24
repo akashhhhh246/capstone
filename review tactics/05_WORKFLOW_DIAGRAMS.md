@@ -1,121 +1,107 @@
 # 05. System Workflow & Architecture Diagrams (Mermaid)
 
-> **Summary:** This document provides clear, visual Mermaid workflow diagrams for **AIShield**. You can render these in any Markdown viewer (GitHub, VS Code, Obsidian) or copy the Mermaid code directly into presentations.
+> **Summary:** Clean, horizontal (widescreen-friendly) Mermaid workflow diagrams for **AIShield**. These are optimized for 16:9 presentation slides and Mermaid Live Editor so they fit on a single screen without vertical scrolling.
 
 ---
 
-## 1. Complete End-to-End System Workflow
+## 1. Widescreen End-to-End System Workflow (`flowchart LR`)
 
-This diagram illustrates how raw information flows from external sources through our multi-layer detection and forensic engines to the analyst dashboard.
+*Optimized horizontally for laptops, projectors, and slides (No vertical scrolling needed).*
 
 ```mermaid
-flowchart TD
-    %% ================= DATA INGESTION =================
-    subgraph S1["1. Data Ingestion & Signal Capture"]
+flowchart LR
+    %% ================= 1. INGESTION =================
+    subgraph S1["1. Live Ingestion Feeds"]
         direction TB
-        IN_GDELT["GDELT Global News Feed<br/>(100+ Languages)"]
-        IN_RSS["Trusted RSS News Feeds<br/>(BBC News, Reuters)"]
-        IN_BSKY["Bluesky Social Stream<br/>(AT-Protocol Firehose)"]
-        IN_SIM["Real-Time Simulation Engine<br/>(Adversarial Attacks + Debunks)"]
+        GDELT["GDELT Global News Feed<br/>(100+ Languages)"]
+        RSS["BBC & Reuters RSS Feeds"]
+        BSKY["Bluesky AT-Protocol"]
+        SIM["WebSocket Simulator<br/>(Attacks + Debunks)"]
     end
 
-    %% ================= NORMALIZATION =================
-    subgraph S2["2. Ingestion Gateway & Preprocessing"]
+    %% ================= 2. GATEWAY =================
+    subgraph S2["2. Processing Gateway"]
         direction TB
-        GATEWAY["FastAPI Ingestion Service"]
-        DEDUP["SHA-256 Deduplication & Content Registry"]
-        CLEAN["Text Normalization & Tokenizer<br/>(Sentence Splitting, Punctuation)"]
+        API["FastAPI Ingestion Gateway"]
+        DEDUP["SHA-256 Deduplication"]
+        CLEAN["Text Normalizer & Tokenizer"]
+        API --> DEDUP --> CLEAN
     end
 
-    IN_GDELT --> GATEWAY
-    IN_RSS --> GATEWAY
-    IN_BSKY --> GATEWAY
-    IN_SIM --> GATEWAY
-
-    GATEWAY --> DEDUP
-    DEDUP --> CLEAN
-
-    %% ================= CORE DEFENSE PIPELINE =================
-    subgraph S3["3. Multi-Layer Intelligence & Defense Pipeline"]
+    %% ================= 3. DEFENSE PIPELINE =================
+    subgraph S3["3. Multi-Layer Defense Pipeline"]
         direction TB
-
-        %% LAYER 1
-        subgraph L1["Layer 1: AI Content Detection (Linguistic Forensic)"]
-            TFIDF["TF-IDF + ML Classifier<br/>(N-gram Stylistic Probability)"]
-            GLTR["GLTR Test Room<br/>(Entropy & Burstiness Predictability)"]
-            WM["Watermark Detector<br/>(Statistical Green/Red Token Biasing)"]
-            L1_OUT["Ensemble AI Probability Score<br/>(0% Human - 100% Synthetic)"]
-            TFIDF --> L1_OUT
-            GLTR --> L1_OUT
-            WM --> L1_OUT
+        subgraph L1["Layer 1: AI Content Detection"]
+            direction TB
+            DET["TF-IDF + GLTR Entropy + Watermarks"]
+            SCORE1["AI Probability Score (0 - 100%)"]
+            DET --> SCORE1
         end
 
-        %% LAYER 2
-        subgraph L2["Layer 2: Provenance Engine (Mutation Lineage)"]
-            EMBED["SentenceTransformer MiniLM-L6-v2<br/>(384-Dimensional Semantic Vectors)"]
-            COS["Cosine Similarity Engine<br/>(Threshold >= 0.75)"]
-            DAG["Directed Acyclic Graph Builder<br/>(Parent-Child Lineage & Word Diffs)"]
-            EMBED --> COS --> DAG
+        subgraph L2["Layer 2: Provenance Lineage"]
+            direction TB
+            EMB["SentenceTransformers MiniLM-L6-v2"]
+            DAG["Parent-Child DAG (Cosine >= 0.75)"]
+            EMB --> DAG
         end
 
-        %% LAYER 3
-        subgraph L3["Layer 3: Network Forensics (Bot Swarms)"]
-            GRAPH["Multi-Platform Social Graph<br/>(Nodes: Users, Posts | Edges: Shares)"]
-            TOPOL["Topological Centrality Extraction<br/>(PageRank, Betweenness, Velocity)"]
-            GNN["PyTorch Graph Neural Network<br/>(2-Layer Graph Convolutional Network)"]
-            GRAPH --> TOPOL --> GNN
-        end
-
-        %% LAYER 4
-        subgraph L4["Layer 4: Campaign Clustering"]
-            CLUSTER["HDBSCAN & Agglomerative Clustering<br/>(Cross-Platform Campaign Aggregation)"]
+        subgraph L3["Layer 3: Network & Bot Forensics"]
+            direction TB
+            GNN["PyTorch Graph Neural Network (GCN)"]
+            BOTS["Topological Bot Cluster Score"]
+            GNN --> BOTS
         end
     end
 
-    CLEAN --> TFIDF
-    CLEAN --> GLTR
-    CLEAN --> WM
-    CLEAN --> EMBED
-    CLEAN --> GRAPH
-    DAG --> CLUSTER
-    GNN --> CLUSTER
-
-    %% ================= RISK ENGINE & DATABASE =================
-    subgraph S4["4. Risk Synthesis & Storage"]
-        RISK["Composite Explainable Risk Engine<br/>(Linguistic + Provenance + Network + Campaign)"]
-        DB[("SQLite WAL Database<br/>(Write-Ahead Logging / High Concurrency)")]
+    %% ================= 4. RISK & DB =================
+    subgraph S4["4. Risk Engine & DB"]
+        direction TB
+        RISK["Composite Threat Engine<br/>(Explainable Risk Fusion)"]
+        DB[("SQLite WAL Database<br/>(Write-Ahead Logging)")]
+        RISK --> DB
     end
 
-    L1_OUT --> RISK
+    %% ================= 5. OPERATIONS CONSOLE =================
+    subgraph S5["5. Analyst Operations Console"]
+        direction TB
+        WS["Live WebSocket Telemetry"]
+        UI["React 18 Dark UI Dashboard"]
+        FLOW["React Flow Draggable DAG Canvas"]
+        LOG["Live Telemetry Log<br/>(Attacks + Debunks)"]
+        WS --> UI
+        UI --> FLOW
+        UI --> LOG
+    end
+
+    %% Inter-stage connections
+    S1 --> API
+    CLEAN --> L1
+    CLEAN --> L2
+    CLEAN --> L3
+    SCORE1 --> RISK
     DAG --> RISK
-    GNN --> RISK
-    CLUSTER --> RISK
-    RISK --> DB
-
-    %% ================= PRESENTATION & TELEMETRY =================
-    subgraph S5["5. Analyst Workbench & Real-Time Telemetry"]
-        WS["WebSocket Telemetry Gateway<br/>(ws:// - Low-Latency Event Push)"]
-        UI["React 18 + TypeScript Dashboard<br/>(Material-UI Cyber Defense Operations Console)"]
-        V1["Content Analysis Gauges"]
-        V2["Interactive Provenance DAG Canvas<br/>(React Flow Draggable Tree)"]
-        V3["Spacious Propagation Swimlanes<br/>(Platform Columns & Bot Nodes)"]
-        V4["Live Telemetry Event Log<br/>(Attacks, Fact-Checks & Official Notices)"]
-    end
-
+    BOTS --> RISK
     RISK --> WS
-    DB --> UI
-    WS --> UI
-    UI --> V1
-    UI --> V2
-    UI --> V3
-    UI --> V4
+    DB -.-> UI
 ```
 
 ---
 
-## 2. Request Lifecycle Sequence (Step-by-Step Flow)
+## 2. Ultra-Compact Executive Architecture (Single-Line Slide View)
 
-This sequence diagram illustrates exactly what happens when an analyst submits a post or when an article is ingested from the live web.
+*Use this simplified 5-stage block diagram if you only have 30 seconds on a single slide.*
+
+```mermaid
+flowchart LR
+    A["📡 Ingestion Feeds<br/>(GDELT, RSS, Bluesky, Simulator)"] --> B["⚙️ Ingestion Gateway<br/>(FastAPI, SHA-256 Dedup, Tokenizer)"]
+    B --> C["🛡️ 3-Layer Forensics<br/>1. TF-IDF + GLTR Entropy<br/>2. SentenceTransformer DAG<br/>3. PyTorch GNN Bot Detector"]
+    C --> D["⚖️ Risk Synthesis & DB<br/>(Explainable Threat Fusion + SQLite WAL)"]
+    D --> E["🖥️ Analyst Workbench<br/>(React 18 + WebSockets + React Flow)"]
+```
+
+---
+
+## 3. Request Lifecycle Sequence (Step-by-Step Flow)
 
 ```mermaid
 sequenceDiagram
@@ -127,35 +113,33 @@ sequenceDiagram
     participant GNN as Propagation Engine (PyG GCN)
     participant DB as SQLite WAL Database
     participant WS as WebSocket Broadcaster
-    participant UI as React Frontend Console
+    participant UI as React Operations Console
 
     Analyst->>API: Submit Text or Ingest RSS/GDELT Article
     API->>DB: Check SHA-256 Hash (Deduplication)
     
     par Parallel Analysis
-        API->>Detect: Evaluate Linguistic Predictability (Entropy, Burstiness, TF-IDF)
+        API->>Detect: Evaluate Predictability (Entropy, Burstiness, TF-IDF)
         Detect-->>API: AI Probability (e.g., 91% Synthetic)
     and
-        API->>Prov: Compute 384-d Embedding & Query Cosine Similarities
-        Prov-->>API: Match to Root Seed -> Build DAG Node
+        API->>Prov: Generate 384-d Embedding & Compute Cosine Similarity
+        Prov-->>API: Link to Root Seed -> Construct DAG Node
     and
-        API->>GNN: Extract Subgraph Features & Pass Message Neighbors
+        API->>GNN: Extract Graph Topology & Pass Node Messages
         GNN-->>API: Bot Coordination Probability & Graph Risk
     end
 
-    API->>API: Calculate Composite Risk Score (Weighted Fusion)
-    API->>DB: Commit Entities (Content, Detection, Posts, Events)
-    API->>WS: Broadcast Event to Active Analysts
-    WS-->>UI: Live Event Push (Type: POST / DEBUNK / VARIANT)
-    API-->>Analyst: Return JSON Forensics Dossier (HTTP 200 OK)
-    UI->>UI: Update Telemetry Gauges, React Flow Canvas & Event Stream
+    API->>API: Compute Composite Threat Score (0 - 100%)
+    API->>DB: Persist Entities (Content, Detection, Posts, Events)
+    API->>WS: Broadcast Event to Connected Analysts
+    WS-->>UI: Live Event Push (POST / DEBUNK / VARIANT)
+    API-->>Analyst: Return Forensic Dossier (HTTP 200 OK)
+    UI->>UI: Update Telemetry Gauges, React Flow Canvas & Event Log
 ```
 
 ---
 
-## 3. Propagation & Defense Dynamics (Simulation Workflow)
-
-This diagram shows how our simulator generates a realistic mixed ecosystem containing both adversarial attacks and defensive counter-measures.
+## 4. Simulation Ecosystem State Diagram
 
 ```mermaid
 stateDiagram-v2
@@ -197,14 +181,17 @@ stateDiagram-v2
 
 ---
 
-## 4. How to Explain This Diagram in Your Viva
+## 5. How to Explain This in Your Viva
 
-When the evaluators ask: *"Walk me through the architecture / workflow of your project"*, point to Section 1 and say:
+When the evaluators ask: *"Explain the architecture / workflow of your project"*, point to the diagram in Section 1:
 
-> *"Our workflow operates in 5 clean stages:
+> *"Our architecture flows from left to right in five clear stages:
 > 
-> 1. **Ingestion:** We pull live, uncurated data continuously from GDELT, RSS feeds, and social platforms, deduplicating via cryptographic hashes.
-> 2. **Content Analysis:** Text is normalized and evaluated by our hybrid ensemble (TF-IDF for stylistics, GLTR for entropy/burstiness, and watermark detection).
-> 3. **Provenance & Graph Forensics:** Simultaneously, our SentenceTransformer maps semantic mutations into a Directed Acyclic Graph (DAG) to find the origin, while our PyTorch Graph Neural Network analyzes the social network to catch bot clusters.
-> 4. **Risk Synthesis:** All four signals are combined into an explainable composite threat score stored in high-concurrency SQLite WAL mode.
-> 5. **Analyst Presentation:** Results are broadcast instantly via WebSockets to our React operations dashboard with interactive visual canvases."*
+> 1. **Ingestion (Left):** We pull real news continuously from GDELT, RSS (BBC/Reuters), and Bluesky, or generate live scenarios in our simulation engine.
+> 2. **Gateway:** FastAPI deduplicates content using SHA-256 hashes and normalizes text for analysis.
+> 3. **Triple-Layer Forensics (Center):**
+>    - *Layer 1 (Linguistic):* Evaluates word predictability with TF-IDF, GLTR entropy, and watermark detection.
+>    - *Layer 2 (Provenance):* SentenceTransformers map semantic mutations into a Directed Acyclic Graph (DAG).
+>    - *Layer 3 (Network):* A PyTorch Graph Neural Network (GNN) inspects social graph topology to uncover bot rings.
+> 4. **Risk & Storage:** All three layers fuse into an explainable composite threat score stored in SQLite WAL mode.
+> 5. **Analyst Console (Right):** Telemetry streams live over WebSockets into our React Flow dashboard for human analysts."*
